@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RepoXR.Managers;
@@ -49,7 +50,8 @@ internal static class CameraEffectsPatches
     }
 
     /// <summary>
-    /// Reduce camera bobbing by 75%
+    /// Scale camera bobbing by the Head Bob setting (0% by default). Only the camera offset is scaled: CameraBob also
+    /// drives the footstep sounds, which keep playing
     /// </summary>
     [HarmonyPatch(typeof(CameraBob), nameof(CameraBob.Update))]
     [HarmonyTranspiler]
@@ -59,11 +61,13 @@ internal static class CameraEffectsPatches
             .MatchForward(false,
                 new CodeMatch(OpCodes.Ldfld, Field(typeof(GameplayManager), nameof(GameplayManager.cameraAnimation))))
             .Repeat(matcher => matcher.Advance(1).InsertAndAdvance(
-                new CodeInstruction(OpCodes.Ldc_R4, 0.25f),
+                new CodeInstruction(OpCodes.Call, ((Func<float>)GetHeadBobMultiplier).Method),
                 new CodeInstruction(OpCodes.Mul)
             ))
             .InstructionEnumeration();
     }
+
+    private static float GetHeadBobMultiplier() => Plugin.Config.HeadBob.Value / 100f;
 
     /// <summary>
     /// Reduce camera jump effects by 75%

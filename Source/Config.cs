@@ -35,6 +35,12 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> ReducedAimImpact { get; } = file.Create("Gameplay", nameof(ReducedAimImpact), false,
         "When enabled, lowers the severity of force-look events (like the ceiling eye), which can be helpful for people with motion sickness");
 
+    [ConfigDescriptor(customName: "Head Bob", stepSize: 5f, suffix: "%")]
+    public ConfigEntry<int> HeadBob { get; } = file.Create("Gameplay", nameof(HeadBob), 0,
+        new ConfigDescription(
+            "How much the camera bobs and sways while walking, relative to the game's own camera bob. Lower it if walking makes you feel sick, 0% turns it off.",
+            new AcceptableValueRange<int>(0, 100)));
+
     [ConfigDescriptor]
     public ConfigEntry<bool> RoomscaleCrouch { get; } = file.Create("Gameplay", nameof(RoomscaleCrouch), true,
         "When enabled, allows for the player to physically crouch to also crouch in-game");
