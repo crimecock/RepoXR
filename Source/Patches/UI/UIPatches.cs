@@ -61,14 +61,13 @@ internal static class UIPatches
         if (XRRayInteractorManager.Instance is not { } manager)
             return true;
 
-        var (interactor, _) = manager.GetActiveInteractor();
-        if (!interactor.TryGetCurrentUIRaycastResult(out var result))
+        if (!manager.TryGetUIHit(out var hitObject, out _))
         {
             __result = false;
             return false;
         }
 
-        if (result.gameObject.GetComponentInParent<Canvas>() != rectTransform.GetComponentInParent<Canvas>())
+        if (hitObject.GetComponentInParent<Canvas>() != rectTransform.GetComponentInParent<Canvas>())
         {
             __result = false;
             return false;
