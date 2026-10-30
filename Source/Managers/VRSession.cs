@@ -53,6 +53,7 @@ public class VRSession : MonoBehaviour
         var topCamera = MainCamera.transform.Find("Camera Top").GetComponent<Camera>();
         topCamera.depth = 1;
         topCamera.targetTexture = null;
+        Rendering.PostProcessingSetting.Apply(MainCamera, topCamera);
         
         // Initialize VR Player
         Player = PlayerController.instance.gameObject.AddComponent<VRPlayer>();

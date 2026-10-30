@@ -127,6 +127,10 @@ public class Config(string assemblyPath, ConfigFile file)
             "How many lights can light an object at full quality. Too few and lights compete (a surface darkens when the flashlight comes near); more costs performance. The PC game uses 12.",
             new AcceptableValueRange<int>(1, 12)));
 
+    [ConfigDescriptor(customName: "Post Processing")]
+    public ConfigEntry<bool> PostProcessing { get; } = file.Create("Rendering", nameof(PostProcessing), false,
+        "The game's post-processing: color grading, vignette, grain and the other screen effects. Off gives a brighter image and saves about 5 ms of GPU time per frame on Quest.");
+
     [ConfigDescriptor]
     public ConfigEntry<bool> Vignette { get; } = file.Create("Rendering", nameof(Vignette), true,
         "Enables the vignette shader used in certain scenarios and levels in the game.");
@@ -179,6 +183,7 @@ public class Config(string assemblyPath, ConfigFile file)
     {
         QualitySettings.pixelLightCount = PixelLightCount.Value;
         PixelLightCount.SettingChanged += (_, _) => QualitySettings.pixelLightCount = PixelLightCount.Value;
+        PostProcessing.SettingChanged += (_, _) => Rendering.PostProcessingSetting.Update();
 
         CameraResolution.SettingChanged += (_, _) =>
         {
