@@ -22,7 +22,13 @@ public class Plugin : BaseUnityPlugin
     public const string PLUGIN_NAME = "RepoXR";
     public const string PLUGIN_VERSION = "1.2.3";
 
-    public const string SUPPORTED_GAME_VERSION = "v0.4.4";
+    public const string SUPPORTED_GAME_VERSION = "v0.5.0";
+
+    /// <summary>
+    /// The standalone Quest build (repo-quest-vr): some features need its shaders and build tools (lamp lighting, level
+    /// culling) or suit the headset's performance (defaults). On PC the upstream defaults apply and those are hidden
+    /// </summary>
+    public static bool IsQuest => Application.platform == RuntimePlatform.Android;
 
     public new static Config Config { get; private set; } = null!;
     public static Flags Flags { get; private set; } = 0;
@@ -47,7 +53,7 @@ public class Plugin : BaseUnityPlugin
             LoadDebugSymbols();
 #endif
 
-        Logger.LogInfo($"Starting {PLUGIN_NAME} v{PLUGIN_VERSION} ({GetCommitHash()})");
+        Logger.LogInfo($"Starting {PLUGIN_NAME} v{PLUGIN_VERSION} ({GetCommitHash()}), unofficial port to R.E.P.O. {SUPPORTED_GAME_VERSION}");
 
         // Allow disabling VR via config and command line
         var disableVr = Config.DisableVR.Value ||

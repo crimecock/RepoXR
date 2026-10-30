@@ -59,6 +59,10 @@ public class VRInputSystem : MonoBehaviour
     /// </summary>
     private static void ApplyPortDefaults(InputActionAsset actions)
     {
+        // On PC RepoXR's own bindings stay: not every controller has a left menu button
+        if (!Plugin.IsQuest)
+            return;
+
         try
         {
             ChangeFirstBinding(actions.FindAction("Menu"), MenuButton);
@@ -76,6 +80,9 @@ public class VRInputSystem : MonoBehaviour
     /// </summary>
     private static void ApplyPortLeftHandedDefaults(InputActionAsset actions)
     {
+        if (!Plugin.IsQuest)
+            return;
+
         try
         {
             actions.FindAction("Menu")?.ApplyBindingOverride(0, MenuButton);

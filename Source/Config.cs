@@ -36,7 +36,7 @@ public class Config(string assemblyPath, ConfigFile file)
         "When enabled, lowers the severity of force-look events (like the ceiling eye), which can be helpful for people with motion sickness");
 
     [ConfigDescriptor(customName: "Head Bob", stepSize: 5f, suffix: "%")]
-    public ConfigEntry<int> HeadBob { get; } = file.Create("Gameplay", nameof(HeadBob), 0,
+    public ConfigEntry<int> HeadBob { get; } = file.Create("Gameplay", nameof(HeadBob), Plugin.IsQuest ? 0 : 25,
         new ConfigDescription(
             "How much the camera bobs and sways while walking, relative to the game's own camera bob. Lower it if walking makes you feel sick, 0% turns it off.",
             new AcceptableValueRange<int>(0, 100)));
@@ -121,39 +121,39 @@ public class Config(string assemblyPath, ConfigFile file)
             "This setting configures the resolution scale of the game, lower values are more performant, but will make the game look worse.",
             new AcceptableValueRange<int>(5, 200)));
 
-    [ConfigDescriptor(customName: "Pixel Lights", stepSize: 1f)]
+    [ConfigDescriptor(customName: "Pixel Lights", stepSize: 1f), QuestOnly]
     public ConfigEntry<int> PixelLightCount { get; } = file.Create("Rendering", nameof(PixelLightCount), 1,
         new ConfigDescription(
             "How many lights can light an object at full quality. Too few and lights compete (a surface darkens when the flashlight comes near); more costs performance. The PC game uses 12.",
             new AcceptableValueRange<int>(1, 12)));
 
-    [ConfigDescriptor(customName: "Lamp Lighting")]
+    [ConfigDescriptor(customName: "Lamp Lighting"), QuestOnly]
     public ConfigEntry<bool> LampLighting { get; } = file.Create("Rendering", nameof(LampLighting), true,
         "Light the lamps nearest to you per pixel, all in one pass, instead of Unity lighting each object with a few of them in extra passes: no seams between objects and less work for the headset, but lamps cast no shadows. Flashlights are unchanged.");
 
     [ConfigDescriptor(customName: "Other Flashlight Shadows")]
-    public ConfigEntry<bool> OtherFlashlightShadows { get; } = file.Create("Rendering", nameof(OtherFlashlightShadows), false,
+    public ConfigEntry<bool> OtherFlashlightShadows { get; } = file.Create("Rendering", nameof(OtherFlashlightShadows), !Plugin.IsQuest,
         "Whether other players' flashlights cast shadows. Each one renders the scene again into its own shadow map: with a full lobby this cost 7-10 ms of GPU time per frame on Quest. Their light stays either way.");
 
     // Quest port: unity-tools/Runtime/LevelCulling.cs reads these three; hiding is rendering only
-    [ConfigDescriptor(customName: "Level Culling")]
+    [ConfigDescriptor(customName: "Level Culling"), QuestOnly]
     public ConfigEntry<bool> LevelCulling { get; } = file.Create("Rendering", nameof(LevelCulling), true,
         "Do not draw the parts of the level that are too far to matter: small objects beyond the distance below, and everything the fog hides completely. Only drawing changes: objects keep working, and multiplayer is not affected. Saves CPU time on Quest.");
 
-    [ConfigDescriptor(customName: "Small Object Distance", stepSize: 5f, suffix: " m")]
+    [ConfigDescriptor(customName: "Small Object Distance", stepSize: 5f, suffix: " m"), QuestOnly]
     public ConfigEntry<int> CullSmallDistance { get; } = file.Create("Rendering", nameof(CullSmallDistance), 20,
         new ConfigDescription(
             "With Level Culling on: props, valuables and items smaller than 1.5 m are not drawn beyond this distance.",
             new AcceptableValueRange<int>(10, 60)));
 
-    [ConfigDescriptor(customName: "Room Distance", stepSize: 5f, suffix: " m")]
+    [ConfigDescriptor(customName: "Room Distance", stepSize: 5f, suffix: " m"), QuestOnly]
     public ConfigEntry<int> CullFarDistance { get; } = file.Create("Rendering", nameof(CullFarDistance), 0,
         new ConfigDescription(
             "With Level Culling on: nothing is drawn beyond this distance. 0 m: as far as the fog lets you see (no visible difference). Lower values hide far rooms for more performance.",
             new AcceptableValueRange<int>(0, 100)));
 
     [ConfigDescriptor(customName: "Post Processing")]
-    public ConfigEntry<bool> PostProcessing { get; } = file.Create("Rendering", nameof(PostProcessing), false,
+    public ConfigEntry<bool> PostProcessing { get; } = file.Create("Rendering", nameof(PostProcessing), !Plugin.IsQuest,
         "The game's post-processing: color grading, vignette, grain and the other screen effects. Off gives a brighter image and saves about 5 ms of GPU time per frame on Quest.");
 
     // Quest port: Rendering/FpsCounter.cs
@@ -189,7 +189,7 @@ public class Config(string assemblyPath, ConfigFile file)
             new AcceptableValueRange<float>(0, 1)));
 
     // [ConfigDescriptor(customName: "Render Mode", trueText: "Single Pass", falseText: "Multipass")]
-    public ConfigEntry<bool> SinglePassRendering { get; } = file.Create("Rendering", nameof(SinglePassRendering), true,
+    public ConfigEntry<bool> SinglePassRendering { get; } = file.Create("Rendering", nameof(SinglePassRendering), Plugin.IsQuest,
         "Whether to render both eyes in a single pass (multiview) instead of one pass per eye. On Quest this roughly halves the rendering work (measured 54 -> 71 FPS on Manor) and post-processing is fixed for it; turn it off if something only shows in one eye.");
 
     // Internal configuration
@@ -211,11 +211,17 @@ public class Config(string assemblyPath, ConfigFile file)
     /// </summary>
     public void SetupGlobalCallbacks()
     {
-        QualitySettings.pixelLightCount = PixelLightCount.Value;
-        PixelLightCount.SettingChanged += (_, _) => QualitySettings.pixelLightCount = PixelLightCount.Value;
+        // Pixel Lights and Lamp Lighting are the Quest build's: on PC the game's own quality settings decide, and the
+        // lamps need the Quest build's shaders (without them they would go dark)
+        if (Plugin.IsQuest)
+        {
+            QualitySettings.pixelLightCount = PixelLightCount.Value;
+            PixelLightCount.SettingChanged += (_, _) => QualitySettings.pixelLightCount = PixelLightCount.Value;
+        }
         PostProcessing.SettingChanged += (_, _) => Rendering.PostProcessingSetting.Update();
         OtherFlashlightShadows.SettingChanged += (_, _) => Rendering.FlashlightShadows.Update();
-        Rendering.LampLighting.Create();
+        if (Plugin.IsQuest)
+            Rendering.LampLighting.Create();
         Rendering.FpsCounter.Create();
 
         CameraResolution.SettingChanged += (_, _) =>
@@ -275,6 +281,12 @@ internal class AcceptableValueEnum<T>() : AcceptableValueBase(typeof(T))
     public override bool IsValid(object value) => true;
     public override string ToDescriptionString() => $"# Acceptable values: {string.Join(", ", names)}";
 }
+
+/// <summary>
+/// A setting only the standalone Quest build uses: not shown in the VR settings on PC
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public class QuestOnlyAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Property)]
 public class ConfigDescriptorAttribute(

@@ -41,6 +41,9 @@ public class SettingsCategoryPage : MonoBehaviour
             if (property.GetCustomAttribute<ConfigDescriptorAttribute>() is not { } descriptor)
                 continue;
 
+            if (!Plugin.IsQuest && property.GetCustomAttribute<QuestOnlyAttribute>() != null)
+                continue;
+
             var setting = (val.SettingType == typeof(bool)
                 ? Instantiate(AssetCollection.BoolSetting, scrollerTransform)
                 : Instantiate(AssetCollection.SliderSetting, scrollerTransform)).GetComponent<SettingOption>();
