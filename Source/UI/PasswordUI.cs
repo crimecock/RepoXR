@@ -60,7 +60,7 @@ public class PasswordUI : MonoBehaviour
     
     private void OnKeyboardKeyPressed(KeyboardValueKey key)
     {
-        passwordPage.password += keyboard.IsShifted ? key.ShiftValue : key.Value;
+        passwordPage.passwordInput.textCurrent += keyboard.IsShifted ? key.ShiftValue : key.Value;  // 0.5.0: a MenuTextInput
     }
 
     private void OnKeyboardFunctionKeyPressed(KeyboardKeyFunc key)
@@ -72,7 +72,8 @@ public class PasswordUI : MonoBehaviour
                 return;
             
             case KeyboardKeyFunc.Function.Backspace:
-                passwordPage.password = passwordPage.password.Remove(Mathf.Max(passwordPage.password.Length - 1, 0));
+                var text = passwordPage.passwordInput.textCurrent;
+                passwordPage.passwordInput.textCurrent = text.Remove(Mathf.Max(text.Length - 1, 0));
                 break;
         }
     }

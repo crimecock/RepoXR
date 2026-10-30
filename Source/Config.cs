@@ -135,6 +135,23 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> OtherFlashlightShadows { get; } = file.Create("Rendering", nameof(OtherFlashlightShadows), false,
         "Whether other players' flashlights cast shadows. Each one renders the scene again into its own shadow map: with a full lobby this cost 7-10 ms of GPU time per frame on Quest. Their light stays either way.");
 
+    // Quest port: unity-tools/Runtime/LevelCulling.cs reads these three; hiding is rendering only
+    [ConfigDescriptor(customName: "Level Culling")]
+    public ConfigEntry<bool> LevelCulling { get; } = file.Create("Rendering", nameof(LevelCulling), true,
+        "Do not draw the parts of the level that are too far to matter: small objects beyond the distance below, and everything the fog hides completely. Only drawing changes: objects keep working, and multiplayer is not affected. Saves CPU time on Quest.");
+
+    [ConfigDescriptor(customName: "Small Object Distance", stepSize: 5f, suffix: " m")]
+    public ConfigEntry<int> CullSmallDistance { get; } = file.Create("Rendering", nameof(CullSmallDistance), 20,
+        new ConfigDescription(
+            "With Level Culling on: props, valuables and items smaller than 1.5 m are not drawn beyond this distance.",
+            new AcceptableValueRange<int>(10, 60)));
+
+    [ConfigDescriptor(customName: "Room Distance", stepSize: 5f, suffix: " m")]
+    public ConfigEntry<int> CullFarDistance { get; } = file.Create("Rendering", nameof(CullFarDistance), 0,
+        new ConfigDescription(
+            "With Level Culling on: nothing is drawn beyond this distance. 0 m: as far as the fog lets you see (no visible difference). Lower values hide far rooms for more performance.",
+            new AcceptableValueRange<int>(0, 100)));
+
     [ConfigDescriptor(customName: "Post Processing")]
     public ConfigEntry<bool> PostProcessing { get; } = file.Create("Rendering", nameof(PostProcessing), false,
         "The game's post-processing: color grading, vignette, grain and the other screen effects. Off gives a brighter image and saves about 5 ms of GPU time per frame on Quest.");

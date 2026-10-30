@@ -19,6 +19,10 @@ internal static class MenuTextInputPatches
     [HarmonyPostfix]
     private static void OnMenuTextInputCreate(MenuTextInput __instance)
     {
+        // R.E.P.O. 0.5.0: the password page's field is a MenuTextInput too, but PasswordUI brings its own keyboard
+        if (__instance.GetComponentInParent<MenuPagePassword>() != null)
+            return;
+
         var canvas = __instance.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
         var keyboardContainer = new GameObject("Keyboard Scale")
             {
@@ -52,33 +56,6 @@ internal static class MenuTextInputPatches
             .InstructionEnumeration();
     }
     
-    // Bunch of menu close detection patches
-
-    [HarmonyPatch(typeof(MenuPageServerListCreateNew), nameof(MenuPageServerListCreateNew.ExitPage))]
-    [HarmonyPostfix]
-    private static void OnCreateServerButtonExit()
-    {
-        InputKeyboard.instance.Close();
-    }
-
-    [HarmonyPatch(typeof(MenuPageServerListCreateNew), nameof(MenuPageServerListCreateNew.ButtonConfirm))]
-    [HarmonyPostfix]
-    private static void OnCreateServerButtonConfirm()
-    {
-        InputKeyboard.instance.Close();
-    }
-
-    [HarmonyPatch(typeof(MenuPageServerListSearch), nameof(MenuPageServerListSearch.ExitPage))]
-    [HarmonyPostfix]
-    private static void OnSearchServerButtonExit()
-    {
-        InputKeyboard.instance.Close();
-    }
-
-    [HarmonyPatch(typeof(MenuPageServerListSearch), nameof(MenuPageServerListSearch.ButtonConfirm))]
-    [HarmonyPostfix]
-    private static void OnSearchServerButtonConfirm()
-    {
-        InputKeyboard.instance.Close();
-    }
+    // Menu close detection: R.E.P.O. 0.5.0 replaced MenuPageServerListCreateNew and MenuPageServerListSearch (and the
+    // save rename page) with one text prompt, MenuPagePopUpTextInput, its close detection is in MenuPageSavesPatches
 }

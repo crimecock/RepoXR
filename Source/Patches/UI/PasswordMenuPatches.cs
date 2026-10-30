@@ -30,20 +30,6 @@ internal static class PasswordMenuPatches
         __instance.GetComponent<PasswordUI>().OnConfirm();
     }
 
-    /// <summary>
-    /// Fix the cursor position in VR
-    /// </summary>
-    [HarmonyPatch(typeof(MenuPagePassword), nameof(MenuPagePassword.PasswordTextSet))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> TextCursorPatch(IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt, PropertyGetter(typeof(Transform), nameof(Transform.position))))
-            .SetOperandAndAdvance(PropertyGetter(typeof(Transform), nameof(Transform.localPosition)))
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt, PropertySetter(typeof(Transform), nameof(Transform.position))))
-            .SetOperandAndAdvance(PropertySetter(typeof(Transform), nameof(Transform.localPosition)))
-            .InstructionEnumeration();
-    }
+    // R.E.P.O. 0.5.0: the password page has no PasswordTextSet of its own any more, its field is a MenuTextInput, whose
+    // cursor MenuTextInputPatches.TextCursorPatch fixes
 }

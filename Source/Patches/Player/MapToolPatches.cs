@@ -114,7 +114,7 @@ internal static class MapToolPatches
     private static IEnumerable<CodeInstruction> NoShakePatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
-            .MatchForward(false, new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraShake), nameof(CameraShake.Shake))))
+            .MatchForward(false, new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraShake), nameof(CameraShake.Shake), [typeof(float), typeof(float)])))
             .Repeat(matcher => matcher
                 .Advance(-4)
                 .SetOpcodeAndAdvance(OpCodes.Nop)

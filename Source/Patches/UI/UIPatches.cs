@@ -147,7 +147,8 @@ internal static class UIPatches
     /// <summary>
     /// Detect UI hits using VR pointers instead of mouse cursor
     /// </summary>
-    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseGetLocalPositionWithinRectTransform))]
+    // R.E.P.O. 0.5.0 added an overload with an explicit mouse position, this one passes the cursor's
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseGetLocalPositionWithinRectTransform), typeof(RectTransform))]
     [HarmonyPrefix]
     private static bool UIMouseGetLocalPositionWithinRectTransformPatch(RectTransform rectTransform,
         ref Vector2 __result)
@@ -287,7 +288,7 @@ internal static class UIPatches
     {
         var manager = XRRayInteractorManager.Instance;
 
-        if (!__instance.menuElementHover.isHovering || manager == null || SemiFunc.InputDown(InputKey.Confirm) ||
+        if (!__instance.menuElementHover.isHovering || manager == null || SemiFunc.InputDown(InputKey.UIClick) ||
             SemiFunc.InputDown(InputKey.Grab))
             return;
 

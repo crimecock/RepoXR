@@ -110,8 +110,9 @@ internal static class PhysGrabberPatches
     {
         return new CodeMatcher(instructions)
             // Use VR controls for rotation instead of mouse inputs
-            .MatchForward(false, new CodeMatch(OpCodes.Ldstr, "Mouse X"))
-            .RemoveInstructions(10)
+            // R.E.P.O. 0.5.0: x = SemiFunc.InputMouseX() * sensitivity; y = SemiFunc.InputMouseY() * sensitivity (8 instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Call, Method(typeof(SemiFunc), nameof(SemiFunc.InputMouseX))))
+            .RemoveInstructions(8)
             .Insert(
                 // TESTER: Check these operands in Debug vs Release builds
                 new CodeInstruction(OpCodes.Ldloca_S, Plugin.GameDebugBuild ? 13 : 5), // Mouse X
@@ -235,14 +236,20 @@ internal static class PhysGrabberUniversalPatches
     /// <summary>
     /// Make our tumble climb follow our hand rotation instead of the camera rotation
     /// </summary>
-    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.GrabStateClimb))]
+    // R.E.P.O. 0.5.0: the climb rotation moved out of GrabStateClimb into ClimbTargetUpdate, which starts from the
+    // climb stick's rotation (`var rotation = climbStickTransform.rotation`); that read becomes the hand's rotation.
+    // (Matched against GrabStateClimb, which no longer calls Quaternion.Angle, the old Advance(-5) cut into its end and
+    // IL2CPP refused the method)
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ClimbTargetUpdate))]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> HandBasedTumbleClimbPatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
-                new CodeMatch(OpCodes.Call, Method(typeof(Quaternion), nameof(Quaternion.Angle))))
-            .Advance(-5)
+                new CodeMatch(OpCodes.Ldfld, Field(typeof(PhysGrabber), nameof(PhysGrabber.climbStickTransform))),
+                new CodeMatch(OpCodes.Callvirt, PropertyGetter(typeof(Transform), nameof(Transform.rotation))),
+                new CodeMatch(OpCodes.Stloc_0))
+            .ThrowIfInvalid("PhysGrabber.ClimbTargetUpdate: climbStickTransform.rotation not found")
             .SetAndAdvance(OpCodes.Call, ((Func<PhysGrabber, Quaternion>)GetRotation).Method)
             .RemoveInstruction()
             .InstructionEnumeration();

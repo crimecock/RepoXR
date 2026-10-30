@@ -82,10 +82,9 @@ public class InputKeyboard : MonoBehaviour
                 break;
             
             case KeyboardKeyFunc.Function.Enter:
-                if (menuInput.GetComponentInParent<MenuPageServerListCreateNew>() is {} createPage)
-                    createPage.ButtonConfirm();
-                else if (menuInput.GetComponentInParent<MenuPageServerListSearch>() is {} searchPage)
-                    searchPage.ButtonConfirm();
+                // R.E.P.O. 0.5.0: server name, server search and save rename all use this one text prompt
+                if (menuInput.GetComponentInParent<MenuPagePopUpTextInput>() is {} popUp)
+                    popUp.ButtonEventConfirm();
                     
                 break;
         }

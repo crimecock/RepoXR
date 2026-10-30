@@ -150,6 +150,12 @@ internal static class InputPatches
                 or InputKey.Inventory3 or InputKey.Interact when __instance.disableMovementTimer > 0:
                 return true;
 
+            // R.E.P.O. 0.5.0 clicks its menus through InputKey.UIClick (SemiFunc.InputUIClick) instead of
+            // Input.GetMouseButtonDown, which the mouse input patches below replaced; the VR actions have no UIClick
+            case InputKey.UIClick when XRRayInteractorManager.Instance is { } rays:
+                __result = rays.GetTriggerDown();
+                return false;
+
             // Do not allow pause menu during loading
             case InputKey.Menu when LoadingUI.instance.isActiveAndEnabled:
 
@@ -178,6 +184,12 @@ internal static class InputPatches
         if (__instance.disableControlsExceptTimer > 0 && !__instance.disableControlsExceptList.Contains(key))
             return true;
 
+        if (key == InputKey.UIClick && XRRayInteractorManager.Instance is { } rays)
+        {
+            __result = rays.GetTriggerUp();
+            return false;
+        }
+
         __result = __instance.GetAction(key).WasReleasedThisFrame();
 
         return false;
@@ -192,6 +204,12 @@ internal static class InputPatches
 
         if (__instance.disableControlsExceptTimer > 0 && !__instance.disableControlsExceptList.Contains(key))
             return true;
+
+        if (key == InputKey.UIClick && XRRayInteractorManager.Instance is { } rays)
+        {
+            __result = rays.GetTriggerButton();
+            return false;
+        }
 
         __result = __instance.GetAction(key).IsPressed();
 
@@ -243,9 +261,10 @@ internal static class InputPatches
     /// </summary>
     [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputDisplayGetString))]
     [HarmonyPrefix]
-    private static bool InputDisplayGetString(InputAction action, int bindingIndex, ref string __result)
+    // by position: R.E.P.O. 0.5.0 renamed the parameters (_action, _index)
+    private static bool InputDisplayGetString(InputAction __0, int __1, ref string __result)
     {
-        var binding = action.bindings[bindingIndex].effectivePath;
+        var binding = __0.bindings[__1].effectivePath;
         __result = Utils.GetControlSpriteString(binding);
 
         return false;
@@ -254,7 +273,7 @@ internal static class InputPatches
     /// <summary>
     /// Use our own <see cref="VRInputSystem.InputToggleGet"/> since we might have other bindings not present in the base game
     /// </summary>
-    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputToggleGet))]
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputToggleGet), typeof(InputKey))]  // 0.5.0 added a scheme overload
     [HarmonyPrefix]
     private static bool InputToggleGet(ref InputKey key, ref bool __result)
     {
@@ -266,13 +285,16 @@ internal static class InputPatches
     /// <summary>
     /// Prevent the addition of underlines in the input text
     /// </summary>
-    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputDisplayReplaceTags))]
+    // R.E.P.O. 0.5.0: InputManager.InputDisplayReplaceTags is obsolete and forwards (through
+    // SemiFunc.InputDisplayReplaceTags) to the new InputGlyphs.ReplaceTags
+    [HarmonyPatch(typeof(InputGlyphs), nameof(InputGlyphs.ReplaceTags))]
     [HarmonyPrefix]
-    private static bool NoUnderlinePatch(InputManager __instance, ref string __result, ref string _text)
+    private static bool NoUnderlinePatch(ref string __result, string __0)
     {
-        _text = __instance.tagDictionary.Aggregate(_text,
+        var __instance = InputManager.instance;
+        var _text = __instance.tagDictionary.Aggregate(__0,
             (current, keyValuePair) => current.Replace(keyValuePair.Key,
-                __instance.InputDisplayGet(keyValuePair.Value, MenuKeybind.KeyType.InputKey, MovementDirection.Up)));
+                __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up)));
 
         __result = _text;
 

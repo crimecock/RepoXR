@@ -7,9 +7,10 @@ namespace RepoXR.Patches.UI;
 internal static class MenuPageSavesPatches
 {
     /// <summary>
-    /// Make sure to close the keyboard after renaming
+    /// Make sure to close the keyboard after renaming (R.E.P.O. 0.5.0: every text prompt, the save rename among them, is
+    /// the shared MenuPagePopUpTextInput)
     /// </summary>
-    [HarmonyPatch(typeof(MenuPageSavesRename), nameof(MenuPageSavesRename.ButtonConfirm))]
+    [HarmonyPatch(typeof(MenuPagePopUpTextInput), nameof(MenuPagePopUpTextInput.ButtonEventConfirm))]
     [HarmonyPostfix]
     private static void OnConfirm()
     {
@@ -20,7 +21,7 @@ internal static class MenuPageSavesPatches
     /// <summary>
     /// Make sure to close the keyboard after canceling the renaming
     /// </summary>
-    [HarmonyPatch(typeof(MenuPageSavesRename), nameof(MenuPageSavesRename.ExitPage))]
+    [HarmonyPatch(typeof(MenuPagePopUpTextInput), nameof(MenuPagePopUpTextInput.ButtonEventCancel))]
     [HarmonyPostfix]
     private static void OnExitPage()
     {

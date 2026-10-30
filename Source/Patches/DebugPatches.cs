@@ -14,9 +14,11 @@ internal static class DebugPatches
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> InjectVRTextPatch(IEnumerable<CodeInstruction> instructions)
     {
-        return new CodeMatcher(instructions)
-            .MatchForward(false, new CodeMatch(OpCodes.Ldstr, "{0}\n{1} ({2})"))
-            .SetOperandAndAdvance("{0} (VR)\n{1} ({2})")
-            .InstructionEnumeration();
+        // R.E.P.O. 0.5.0 builds the text from pieces, without this format string: leave it as it is then
+        var matcher = new CodeMatcher(instructions)
+            .MatchForward(false, new CodeMatch(OpCodes.Ldstr, "{0}\n{1} ({2})"));
+        if (matcher.IsValid)
+            matcher.SetOperandAndAdvance("{0} (VR)\n{1} ({2})");
+        return matcher.InstructionEnumeration();
     }
 }

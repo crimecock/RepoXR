@@ -91,6 +91,12 @@ public class XRRayInteractorManager : MonoBehaviour
         return actions.uiPressAction.action.WasPressedThisFrame();
     }
 
+    public bool GetTriggerUp()
+    {
+        var (_, actions) = GetActiveInteractor();
+        return actions.uiPressAction.action.WasReleasedThisFrame();
+    }
+
     public bool GetTriggerButton()
     {
         var (_, actions) = GetActiveInteractor();
