@@ -15,7 +15,6 @@ Thanks to the people whose work this port stands on · спасибо автор
   ([Thunderstore](https://thunderstore.io/c/repo/p/DaXcess/RepoXR)).
 - **[Dobutsu](https://github.com/Dobutsu)**: [repo-quest-vr](https://github.com/Dobutsu/repo-quest-vr), the original
   standalone Quest port · оригинальный порт на Quest без ПК ([ko-fi](https://ko-fi.com/dobutsu)).
-- **semiwork**: [R.E.P.O.](https://store.steampowered.com/app/3241660/REPO/)
 - **[BepInEx](https://github.com/BepInEx)**: [BepInEx](https://github.com/BepInEx/BepInEx) and
   [HarmonyX](https://github.com/BepInEx/HarmonyX).
 - **[xiaoxiao921](https://github.com/xiaoxiao921)**: [FixPluginTypesSerialization](https://github.com/xiaoxiao921/FixPluginTypesSerialization)

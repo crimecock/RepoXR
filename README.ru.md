@@ -22,7 +22,6 @@
   ([Thunderstore](https://thunderstore.io/c/repo/p/DaXcess/RepoXR)).
 - **[Dobutsu](https://github.com/Dobutsu)** — [repo-quest-vr](https://github.com/Dobutsu/repo-quest-vr), оригинальный
   порт на Quest без ПК ([ko-fi](https://ko-fi.com/dobutsu)).
-- **semiwork** — [R.E.P.O.](https://store.steampowered.com/app/3241660/REPO/)
 - **[BepInEx](https://github.com/BepInEx)** — [BepInEx](https://github.com/BepInEx/BepInEx) и
   [HarmonyX](https://github.com/BepInEx/HarmonyX).
 - **[xiaoxiao921](https://github.com/xiaoxiao921)** — [FixPluginTypesSerialization](https://github.com/xiaoxiao921/FixPluginTypesSerialization)
