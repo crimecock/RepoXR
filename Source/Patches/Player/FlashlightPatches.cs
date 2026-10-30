@@ -27,6 +27,16 @@ internal static class FlashlightPatches
         __instance.GetComponentInChildren<FlashlightSprint>().enabled = false;
         __instance.GetComponentInChildren<FlashlightTilt>().enabled = false;
     }
+
+    /// <summary>
+    /// Other players' flashlights drop their shadows unless Rendering.OtherFlashlightShadows is on
+    /// </summary>
+    [HarmonyPatch(typeof(FlashlightController), nameof(FlashlightController.Start))]
+    [HarmonyPostfix]
+    private static void OnFlashlightStarted(FlashlightController __instance)
+    {
+        RepoXR.Rendering.FlashlightShadows.Register(__instance);
+    }
 }
 
 [RepoXRPatch(RepoXRPatchTarget.Universal)]
