@@ -24,6 +24,9 @@ public class FocusSphere : MonoBehaviour
     {
         renderer.material.SetFloat(FadeStart, 0f);
         renderer.material.SetFloat(FadeEnd, 0f);
+        // Its shader grabs the screen (GrabPass): a full-frame copy every frame while the renderer is on, even fully
+        // faded out. On Pico 4 Ultra that copy alone took the levels from ~85 to ~14 FPS, so it only draws while seen
+        renderer.enabled = false;
 
         camera = Camera.main!.transform;
     }
@@ -48,6 +51,8 @@ public class FocusSphere : MonoBehaviour
             renderer.material.SetFloat(FadeStart, animOut.Evaluate(strengthLerp) * lookAtStrength * 0.92f);
             renderer.material.SetFloat(FadeEnd, animOut.Evaluate(strengthLerp) * lookAtStrength);
         }
+
+        renderer.enabled = strengthLerp > 0;
 
         if (hasTarget && strengthLerp > 0)
             transform.LookAt(lookAtTarget);
