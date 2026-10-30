@@ -1,3 +1,55 @@
+# 1.2.3-repo0.5.0-alpha.3 (unofficial fork)
+
+**Changes**:
+- The whip works in VR: snap the controller back and forward to crack (also from over the shoulder), swing to fling
+  what it has caught. Its gestures read the hand's angular velocity while you hold it, with an upright aim frame at the
+  hand; VR Settings → Input → *Whip Sideways Sensitivity* (0.5) and *Whip Crack Sensitivity* (1)
+- Camera aim targets expire again: RepoXR skips `CameraAim.Update`, and with it the timers that end the aim targets the
+  game forces on the camera; `CameraAim.AimTargetActive` stayed true for good and kept the whip's gestures off
+- Level → shop no longer hangs on the result screen: in the scene handoff the old VR loading UI cleared the new one's
+  instance, and `ResultScreenPatches` threw on every frame
+- The main menu's news popup reads normally: its texts are built again once it has grown, and the popups' scale keeps a
+  depth of 1
+- Docs: how to update an existing install; what was tested and how; the whip in the controls
+- Tested on PC (SteamVR, Virtual Desktop): menus, lobby, levels, shop, grabbing, guns, whip, tumble climbing,
+  multiplayer with other players (also works on the Quest)
+- Known: visual glitches in the settings menus (toggles, sliders; they work) and `?` instead of the controller icons
+  on the VR controls page
+
+# 1.2.3-repo0.5.0-alpha.2 (unofficial fork)
+
+**Changes**:
+- Unity 6 XR runtime libraries instead of RepoXR 1.2.3's Unity 2022 ones: OpenXR plugin 1.14.3 (native plugin and
+  loader for Windows x64), XR Management 4.5.0, XR Interaction Toolkit 2.6.4, XR Core Utils 2.6.0, Legacy Input
+  Helpers 2.1.13, compiled for Windows by `tools/xr-deps/build.py`; the game's own Unity.Mathematics is used
+- The ways to start in VR are documented (SteamVR, Meta Quest Link, Virtual Desktop, other OpenXR runtimes)
+- `InputKey.ChatConfirm` (0.5.0's name for `Confirm`) uses RepoXR's "Confirm" action again
+- The gamepad's new grab cursor drift (`InputManager.GrabCursorDriftGet`) is 0 in VR
+- PC: R.E.P.O. 0.5.0's Addressables only read binary catalogs, so RepoXR's `catalog_0.1.json` does not load there;
+  the VR tutorial texts then keep the game's own instead of failing
+- An all-in-one zip for the game folder: BepInEx 5.4.23, FixPluginTypesSerialization 1.1.1 and RepoXR
+- First test on PC: alpha 2 (all-in-one zip) starts in VR on Windows; the gameplay is being checked
+- Checked on PC: grabbing and tumble climbing work (the climb is pulled where the hand points)
+- Docs: how grabbing was fixed for 0.5.0 (README, docs/repo-0.5.0.md "Grabbing: what broke and how it was fixed")
+- Known: the main menu's news popup draws its text as solid bars (PC and Quest); fixed in alpha 3
+
+# 1.2.3-repo0.5.0-alpha.1 (unofficial fork)
+
+Port to R.E.P.O. 0.5.0 (Unity 6000.3); details in [docs/repo-0.5.0.md](docs/repo-0.5.0.md).
+
+**Changes**:
+- Game API changes of 0.5.0 followed: renamed input keys (`UIClick`), new overloads, the new text prompt page, the
+  climb rotation, vehicles and their keys, gun aim and grab release from the hand
+- Menus: pointer mode kept, hover areas on the world-space canvas, `XRUIInputModule` on the scene's EventSystem, the
+  pointer hits canvases by hand where XRI's UI raycast finds nothing, the first main menu unblocked, the VR Settings
+  button moved below the new Language tab, the asset bundle's texts get the game's font
+- Grabbing works again with *Item Unequip Auto Hold* (`ForceHoldPatch` follows `GrabInputActiveGet`)
+- Scene handoff: RepoXR's root objects move into the loaded scene, the Reload scene's camera is no longer the main
+  camera, and shared XR actions stay enabled (the view followed the head only in the tutorial)
+- From repo-quest-vr: Head Bob, Post Processing and other players' flashlight shadows settings, an FPS counter; the
+  Quest-only Pixel Lights, Lamp Lighting and Level Culling are hidden on PC
+- Tested on a Quest 3 (standalone build); the PC build is not tested in VR yet
+
 # 1.2.3
 
 **Changes**:
