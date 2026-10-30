@@ -155,8 +155,8 @@ public class Config(string assemblyPath, ConfigFile file)
             new AcceptableValueRange<float>(0, 1)));
 
     // [ConfigDescriptor(customName: "Render Mode", trueText: "Single Pass", falseText: "Multipass")]
-    public ConfigEntry<bool> SinglePassRendering { get; } = file.Create("Rendering", nameof(SinglePassRendering), false,
-        "Whether to render this game in Single Pass mode, which is more optimized but may not be supported by other mods or shaders. Do not enable unless you know what you're doing!");
+    public ConfigEntry<bool> SinglePassRendering { get; } = file.Create("Rendering", nameof(SinglePassRendering), true,
+        "Whether to render both eyes in a single pass (multiview) instead of one pass per eye. On Quest this roughly halves the rendering work (measured 54 -> 71 FPS on Manor) and post-processing is fixed for it; turn it off if something only shows in one eye.");
 
     // Internal configuration
 
