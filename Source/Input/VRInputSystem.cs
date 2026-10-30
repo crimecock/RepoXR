@@ -27,6 +27,7 @@ public class VRInputSystem : MonoBehaviour
         _instance = this;
 
         ApplyPortDefaults(AssetCollection.VRInputs);
+        AcceptAnyXRControllers(AssetCollection.VRInputs);
 
         playerInput = gameObject.AddComponent<PlayerInput>();
         playerInput.actions = AssetCollection.VRInputs;
@@ -50,44 +51,56 @@ public class VRInputSystem : MonoBehaviour
             JsonConvert.DeserializeObject<Dictionary<string, bool>>(Plugin.Config.InputToggleBindings.Value) ?? [];
     }
 
-    private float nextSchemeCheck;
+    private float schemeCheckAt = 5;
 
     /// <summary>
-    /// RepoXR's control schemes name the controller layouts they need (Oculus Touch, Quest Pro, Index, ...). A Quest 3
-    /// on its own runtime reports Touch Plus controllers, which no scheme names: the input still worked (the bindings
-    /// are on generic XR controllers), but there was no control scheme, and the controls page said "DISCONNECTED" and
-    /// allowed no rebinding. With XR controllers present and no scheme, the closest scheme is picked for them
+    /// If the controllers still match no control scheme a few seconds in, say which ones they are
     /// </summary>
     private void Update()
     {
-        if (!string.IsNullOrEmpty(playerInput.currentControlScheme) || Time.unscaledTime < nextSchemeCheck)
+        if (schemeCheckAt < 0 || Time.unscaledTime < schemeCheckAt)
             return;
 
-        nextSchemeCheck = Time.unscaledTime + 1;
+        schemeCheckAt = -1;
+        if (!string.IsNullOrEmpty(playerInput.currentControlScheme))
+            return;
 
-        var controllers = new List<InputDevice>();
+        var layouts = new List<string>();
         foreach (var device in InputSystem.devices)
-            if (device is UnityEngine.InputSystem.XR.XRController && device.added)
-                controllers.Add(device);
+            if (device is UnityEngine.InputSystem.XR.XRController)
+                layouts.Add(device.layout);
+        Logger.LogWarning($"No control scheme matches the controllers ({string.Join(", ", layouts)}): the controls page cannot rebind");
+    }
 
-        if (controllers.Count == 0)
+    /// <summary>
+    /// RepoXR's control schemes name the controller layouts they need (Oculus Touch, Quest Pro, Index, ...). On its own
+    /// runtime a Quest 3 reports its Touch Plus controllers through the XR input subsystem
+    /// (XRInputV1::Oculus::MetaQuestTouchPlusControllerOpenXR), which no scheme names: input worked (the bindings are on
+    /// generic XR controllers), but there was no control scheme, the controls page said "DISCONNECTED" and allowed no
+    /// rebinding. On the Quest the "Meta Quest" scheme also takes any pair of XR controllers
+    /// </summary>
+    private static void AcceptAnyXRControllers(InputActionAsset actions)
+    {
+        if (!Plugin.IsQuest)
             return;
 
-        var layouts = string.Join(", ", controllers.ConvertAll(device => device.layout));
-        var scheme = layouts.IndexOf("Quest", StringComparison.OrdinalIgnoreCase) >= 0 ? "Meta Quest" : "Oculus";
-        if (playerInput.actions.FindControlSchemeIndex(scheme) < 0)
-            scheme = "Oculus";
+        var index = actions.FindControlSchemeIndex("Meta Quest");
+        if (index < 0)
+            return;
 
-        try
+        var scheme = actions.controlSchemes[index];
+        foreach (var requirement in scheme.deviceRequirements)
+            if (requirement.controlPath.StartsWith("<XRController>"))
+                return;
+
+        var requirements = new List<InputControlScheme.DeviceRequirement>(scheme.deviceRequirements)
         {
-            playerInput.SwitchCurrentControlScheme(scheme, controllers.ToArray());
-            Logger.LogInfo($"No control scheme matched the controllers ({layouts}): using {scheme}");
-        }
-        catch (Exception e)
-        {
-            Logger.LogWarning($"No control scheme matched the controllers ({layouts}), and {scheme} could not be used: {e.Message}");
-            nextSchemeCheck = Time.unscaledTime + 30;
-        }
+            new() { controlPath = "<XRController>{LeftHand}", isOR = true },
+            new() { controlPath = "<XRController>{RightHand}" }
+        };
+
+        actions.RemoveControlScheme(scheme.name);
+        actions.AddControlScheme(new InputControlScheme(scheme.name, requirements, scheme.bindingGroup));
     }
 
     private const string MenuButton = "<XRController>{LeftHand}/{MenuButton}";
