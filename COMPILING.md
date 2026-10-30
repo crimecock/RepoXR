@@ -2,42 +2,60 @@
 
 ## This fork: R.E.P.O. 0.5.0 · Этот форк
 
-NuGet only has R.E.P.O. 0.4.4 and Unity 2022, so this fork builds against **your game folder**: the game's code,
-Unity 6, Photon, Steamworks and the XR packages built for Unity 6 come from there (see `RepoXR.csproj`). NuGet only
-provides BepInEx, CustomDiscoverStateLib and the publicizer.
+**Why it differs from DaXcess's way below.** A mod is compiled against the game's own DLLs (its code, Unity, Photon,
+Steamworks). DaXcess's RepoXR downloads them from NuGet, a package server for .NET, but NuGet only has R.E.P.O. 0.4.4
+and Unity 2022. So this fork's `RepoXR.csproj` takes them from **your installed R.E.P.O. 0.5.0**, and the XR libraries
+built for Unity 6 from this fork's all-in-one zip unpacked in the game folder. From NuGet it only downloads BepInEx,
+CustomDiscoverStateLib (an optional mod RepoXR works with) and the publicizer (lets the mod use the game's private
+members, as every R.E.P.O. mod does).
 
-You need:
-- the [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) or newer: RepoXR uses C# 14 (`extension` blocks), which older SDKs reject with `CS0106`;
+**You need**
+- the [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) or newer. RepoXR uses C# 14 (`extension`
+  blocks); .NET 8 stops with `CS0106`;
 - R.E.P.O. 0.5.0 from Steam, with this fork's `…-all-in-one.zip` from [Releases](https://github.com/crimecock/RepoXR/releases)
-  unpacked into the game folder (its `BepInEx/plugins/RepoXR/RuntimeDeps` has the XR packages);
-- internet for NuGet.
+  unpacked into the game folder (as for playing; its `BepInEx/plugins/RepoXR/RuntimeDeps` has the XR libraries);
+- internet the first time (NuGet).
+
+**Steps**
 
 ```sh
 git clone https://github.com/crimecock/RepoXR.git -b repo-0.5.0
 cd RepoXR
-dotnet build RepoXR.sln -c Release
+dotnet build RepoXR.sln -c Release -p:GamePath="C:\Program Files (x86)\Steam\steamapps\common\REPO"
 ```
 
-- The game somewhere else than `C:\Program Files (x86)\Steam\steamapps\common\REPO`: add
-  `-p:GamePath="D:\SteamLibrary\steamapps\common\REPO"` (the folder with `REPO_Data`).
-- The all-in-one zip unpacked elsewhere: `-p:XRDeps=<that folder>/BepInEx/plugins/RepoXR/RuntimeDeps`.
+Without git: the code as a [ZIP](https://github.com/crimecock/RepoXR/archive/refs/heads/repo-0.5.0.zip), unpacked (folder `RepoXR-repo-0.5.0`). `GamePath` is the folder with
+`REPO.exe` and `REPO_Data` (Steam → R.E.P.O. → Properties → Installed Files → Browse); without it the default Steam
+folder is used.
+
+- The all-in-one zip unpacked somewhere else: add `-p:XRDeps=<that folder>/BepInEx/plugins/RepoXR/RuntimeDeps`.
 - macOS or Linux work too, with a copy of the Windows game (for example the one repo-quest-vr's build script downloads
-  into `~/RepoQuest/game`).
+  into `~/RepoQuest/game`): `-p:GamePath=$HOME/RepoQuest/game`.
 
 The DLLs land in `bin/Release/netstandard2.1`. To try yours, copy `RepoXR.dll` over `BepInEx/plugins/RepoXR/RepoXR.dll`
 in the game folder; the all-in-one zip puts the original back. `RepoXR.Preload.dll` is DaXcess's code unchanged (the
 releases ship DaXcess's 1.2.3 build of it).
 
 The releases are built with `-p:DebugSymbols=false`. With it, `RepoXR.dll` has the same code (IL) as the release; the
-default Release build also writes a PDB, and then the compiler keeps a few more local variables.
+default Release build also writes a PDB, and then the compiler keeps a few more local variables. A different .NET 10
+version may lay out a few methods differently, with the same logic.
 
-**По-русски.** В NuGet есть только R.E.P.O. 0.4.4 и Unity 2022, поэтому форк собирается **по папке игры**: код игры,
-Unity 6, Photon, Steamworks и XR-пакеты под Unity 6 берутся оттуда. Нужны .NET SDK 10 или новее (RepoXR написан на C# 14, старые SDK падают с `CS0106`), R.E.P.O. 0.5.0 из Steam
-с распакованным в папку игры архивом «всё в одном» из [релизов](https://github.com/crimecock/RepoXR/releases) и
-интернет для NuGet. Команды — выше; игра в другой папке — `-p:GamePath=…` (папка с `REPO_Data`), архив распакован в
-другое место — `-p:XRDeps=<папка>/BepInEx/plugins/RepoXR/RuntimeDeps`. DLL — в `bin/Release/netstandard2.1`; чтобы
-попробовать свою, положите `RepoXR.dll` вместо `BepInEx/plugins/RepoXR/RepoXR.dll` в папке игры. Релизы собираются с
-`-p:DebugSymbols=false`: так код `RepoXR.dll` совпадает с релизом.
+| Error | What to do |
+|---|---|
+| `CS0106` ("modifier is not valid for this item") | The .NET SDK is older than 10 |
+| `R.E.P.O. not found in '…'` | Pass `-p:GamePath=<the folder with REPO_Data>` |
+| `The Unity 6 XR packages are not in '…'` | Unpack the all-in-one zip into the game folder, or pass `-p:XRDeps=…` |
+| `NU1301` / packages not found | No internet, or NuGet is blocked |
+
+**По-русски.** Мод компилируется по DLL самой игры. RepoXR от DaXcess скачивает их из NuGet (сервер пакетов для .NET),
+но там только R.E.P.O. 0.4.4 и Unity 2022, поэтому `RepoXR.csproj` этого форка берёт их из **вашей установленной
+R.E.P.O. 0.5.0**, а XR-библиотеки под Unity 6 — из архива «всё в одном», распакованного в папку игры. Из NuGet
+скачиваются только BepInEx, CustomDiscoverStateLib и publicizer. Нужны [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0)
+или новее (на .NET 8 — ошибки `CS0106`), игра с распакованным архивом «всё в одном» и интернет в первый раз. Команды —
+выше; `GamePath` — папка с `REPO.exe`; архив распакован в другое место — `-p:XRDeps=…`. DLL — в
+`bin/Release/netstandard2.1`; чтобы попробовать свою, положите `RepoXR.dll` вместо `BepInEx/plugins/RepoXR/RepoXR.dll`.
+С `-p:DebugSymbols=false` код совпадает с релизом. Ошибки — в таблице выше. Пошагово по-русски — в
+[README.ru.md](README.ru.md#сборка-из-исходников).
 
 The rest of this file is DaXcess's original guide for RepoXR on R.E.P.O. 0.4.4.
 

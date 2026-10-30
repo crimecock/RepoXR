@@ -58,22 +58,32 @@
 
 ## Сборка из исходников
 
-**Чтобы играть, собирать ничего не нужно:** в архиве «всё в одном» RepoXR.dll уже готова; собирать — только чтобы
-менять мод. Сборка для Quest ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr)) встраивает в игру ту же DLL:
-тот же код из RepoXR от DaXcess и патчей ([как](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/build-repoxr.ru.md)).
+**Чтобы играть, собирать ничего не нужно:** в архиве «всё в одном» RepoXR.dll уже готова. Собирать самому — только
+чтобы менять мод. Сборка для Quest ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr)) встраивает в игру ту
+же DLL ([как она её собирает](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/build-repoxr.ru.md)).
 
-В NuGet есть только R.E.P.O. 0.4.4, поэтому форк собирается по папке игры (с распакованным в неё архивом «всё в
-одном»). Нужны [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) (RepoXR написан на C# 14, .NET 8 падает
-с `CS0106`) и интернет для NuGet:
+Мод компилируется по DLL самой игры. RepoXR от DaXcess скачивает их из NuGet (сервер пакетов для .NET), но там только
+R.E.P.O. 0.4.4 и Unity 2022, поэтому этот форк берёт их из **вашей установленной игры**.
 
-```sh
-git clone https://github.com/crimecock/RepoXR.git -b repo-0.5.0
-cd RepoXR
-dotnet build RepoXR.sln -c Release -p:GamePath="C:\Program Files (x86)\Steam\steamapps\common\REPO"
-```
+1. **Поставьте [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0).** Не 8: RepoXR написан на C# 14, и
+   .NET 8 останавливается с ошибками `CS0106`.
+2. **Сначала установите мод обычным способом** ([выше](#установка-на-пк)): сборке нужны ещё XR-библиотеки Unity 6 из
+   архива «всё в одном» (`BepInEx/plugins/RepoXR/RuntimeDeps` в папке игры).
+3. **Скачайте код** через git или [ZIP-архивом](https://github.com/crimecock/RepoXR/archive/refs/heads/repo-0.5.0.zip) (распакуется в `RepoXR-repo-0.5.0`):
+   ```sh
+   git clone https://github.com/crimecock/RepoXR.git -b repo-0.5.0
+   cd RepoXR
+   ```
+4. **Соберите.** `GamePath` — папка игры (где `REPO.exe` и `REPO_Data`); интернет нужен один раз — скачать из NuGet
+   BepInEx и два маленьких инструмента сборки:
+   ```sh
+   dotnet build RepoXR.sln -c Release -p:GamePath="C:\Program Files (x86)\Steam\steamapps\common\REPO"
+   ```
+5. **Попробуйте:** положите `bin/Release/netstandard2.1/RepoXR.dll` вместо `BepInEx/plugins/RepoXR/RepoXR.dll` в папке
+   игры. Если снова распаковать архив «всё в одном», вернётся DLL из релиза.
 
-`RepoXR.dll` появится в `bin/Release/netstandard2.1`; положите его вместо `BepInEx/plugins/RepoXR/RepoXR.dll`. С
-`-p:DebugSymbols=false` код совпадает с релизом. Подробно, macOS и Linux — [COMPILING.md](COMPILING.md).
+С `-p:DebugSymbols=false` код DLL в точности как в релизе. Другие папки, macOS и Linux, частые ошибки —
+[COMPILING.md](COMPILING.md).
 
 ## Состояние и что пришлось починить
 
@@ -175,7 +185,7 @@ Push To Talk). На Quest меню на кнопке ≡, а X выключае�
   для Quest 3 без ПК с этим же RepoXR, из вашей копии игры.
   [Управление на Quest](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.ru.md).
 - Код этой ветки (`Source/`) — патчи 0001–0032 из [`patches/repoxr`](https://github.com/crimecock/repo-quest-vr/tree/repo-0.5.0/patches/repoxr)
-  repo-quest-vr поверх RepoXR 1.2.3.
+  repo-quest-vr поверх RepoXR 1.2.3, а патч 0033 — `RepoXR.csproj` этой ветки (сборка по папке игры).
 - Исходные проекты: [DaXcess/RepoXR](https://github.com/DaXcess/RepoXR) (RepoXR 1.2.3, R.E.P.O. 0.4.4),
   [Dobutsu/repo-quest-vr](https://github.com/Dobutsu/repo-quest-vr) (оригинальный порт на Quest).
 
