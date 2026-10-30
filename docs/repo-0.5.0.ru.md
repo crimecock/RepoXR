@@ -11,7 +11,7 @@ Unity 6. Ветка `repo-0.5.0` в [crimecock/RepoXR](https://github.com/crimec
 | Где | Что |
 |---|---|
 | Quest 3, автономно ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr), ветка `repo-0.5.0`) | Тот же исходный код RepoXR, собранный в APK для Quest. С 1.0.7-qc21 играется в шлеме: меню, одиночное лобби и уровни (трекинг головы, лучи, захват), VR-настройки |
-| ПК (BepInEx, релиз этого форка) | **Играется в VR на Windows** (alpha 4, проверено 30 октября 2026 через SteamVR и Virtual Desktop, контроллеры Quest): меню, лобби, уровни и магазин через передачу сцены, трекинг головы, лучи, захват (см. ниже), пушки, хлыст, лазание в кувырке, новость в главном меню, меню настроек и значки контроллера, мультиплеер с другими игроками. Риски — ниже |
+| ПК (BepInEx, релиз этого форка) | **Играется в VR на Windows** (alpha 6; проверено 30 октября 2026 через SteamVR и Virtual Desktop, контроллеры Quest): меню, лобби, уровни и магазин через передачу сцены, трекинг головы, лучи, захват (см. ниже), пушки, хлыст, лазание в кувырке, новость в главном меню, меню настроек и значки контроллера, зеркало в магазине, техника, колесо эмоций, обучение, мультиплеер с другими игроками. Риски — ниже |
 
 Мультиплеер с другими игроками работает на ПК и на Quest; езда на технике на ПК работает. Меню настроек и значки контроллера работают с alpha 4, зеркало в магазине — с alpha 5 (при single-pass скрыто). Оставшиеся известные проблемы — в [README](../README.ru.md#известные-проблемы). На Quest тот же код приходит с 1.0.7-qc27 (патчи 0030–0032).
 
@@ -82,9 +82,9 @@ R.E.P.O. из Steam как обычно, со шлемом и запущенно
 
 | Шлем и подключение | Как |
 |---|---|
-| **SteamVR** (Valve Index, HTC Vive, Pico через Streaming Assistant, Quest через Steam Link или ALVR, любой шлем SteamVR) | Запустите SteamVR, потом игру. Если по умолчанию стоит другой рантайм, выберите SteamVR в выборе рантайма RepoXR или сделайте его основным: SteamVR → Settings → OpenXR → *Set SteamVR as OpenXR Runtime* |
-| **Meta Quest через Link или Air Link** (приложение Meta Quest Link) | Meta Quest Link → Settings → General → *OpenXR Runtime*: сделайте Meta Quest Link активным. Подключите Link, затем запустите игру на ПК |
-| **Virtual Desktop** (Quest, Pico) | Его собственный рантайм (VDXR) находится сам: запустите Virtual Desktop, потом игру с его рабочего стола. В режиме SteamVR игра пойдёт через SteamVR |
+| **[SteamVR](https://store.steampowered.com/app/250820/SteamVR/)** (Valve Index, HTC Vive, Pico через Streaming Assistant, Quest через Steam Link или ALVR, любой шлем SteamVR) | Запустите SteamVR, потом игру. Если по умолчанию стоит другой рантайм, выберите SteamVR в выборе рантайма RepoXR или сделайте его основным: SteamVR → Settings → OpenXR → *Set SteamVR as OpenXR Runtime* |
+| **Meta Quest через Link или Air Link** ([приложение Meta Horizon Link](https://www.meta.com/help/quest/1517439565442928/), раньше Meta Quest Link) | Meta Quest Link → Settings → General → *OpenXR Runtime*: сделайте Meta Quest Link активным. Подключите Link, затем запустите игру на ПК |
+| **[Virtual Desktop](https://www.vrdesktop.net/)** (Quest, Pico; на ПК — приложение Streamer) | Его собственный рантайм (VDXR) находится сам: запустите Virtual Desktop, потом игру с его рабочего стола. В режиме SteamVR игра пойдёт через SteamVR |
 | **Другие рантаймы OpenXR** (Pico Connect, Windows Mixed Reality...) | Сделайте рантайм основным в системе или выберите его в выборе рантайма RepoXR |
 | **Без VR** | Параметр запуска `--disable-vr` или `DisableVR = true` в конфиге. Руки VR-игроков всё равно видно |
 

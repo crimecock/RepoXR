@@ -11,7 +11,7 @@ update. Branch `repo-0.5.0` of [crimecock/RepoXR](https://github.com/crimecock/R
 | Where | State |
 |---|---|
 | Quest 3, standalone ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr), branch `repo-0.5.0`) | The same RepoXR source, built into the Quest APK. Plays on the headset since 1.0.7-qc21: menus, the singleplayer lobby and the levels (head tracking, pointers, grabbing), the VR settings |
-| PC (BepInEx, this fork's release) | **Plays in VR on Windows** (alpha 4, tested 30 October 2026 with SteamVR and Virtual Desktop, Quest controllers): menus, the lobby, levels and the shop through the scene handoff, head tracking, pointers, grabbing (see below), guns, the whip, tumble climbing, the main menu's news popup, the settings menus and the VR controller icons, multiplayer with other players. The risks are listed below |
+| PC (BepInEx, this fork's release) | **Plays in VR on Windows** (alpha 6; tested on 30 October 2026 with SteamVR and Virtual Desktop, Quest controllers): menus, the lobby, levels and the shop through the scene handoff, head tracking, pointers, grabbing (see below), guns, the whip, tumble climbing, the main menu's news popup, the settings menus and the VR controller icons, the shop mirror, vehicles, the expression wheel, the tutorial, multiplayer with other players. The risks are listed below |
 
 Multiplayer with other players works on PC and on the Quest; riding the vehicles works on PC. The settings menus and the controller icons work since alpha 4, the shop mirror since alpha 5 (hidden with single-pass rendering). The remaining known issues are in the [README](../README.md#known-issues--известные-проблемы). On the Quest, the same code comes with 1.0.7-qc27 (patches 0030–0032).
 
@@ -82,9 +82,9 @@ If the game runs as administrator, only the system default can be used.
 
 | Headset and connection | How |
 |---|---|
-| **SteamVR** (Valve Index, HTC Vive, Pico through Streaming Assistant, Quest through Steam Link or ALVR, any SteamVR headset) | Start SteamVR, then the game. If another runtime is the default, either pick SteamVR in RepoXR's runtime selector or make it the default: SteamVR → Settings → OpenXR → *Set SteamVR as OpenXR Runtime* |
-| **Meta Quest through Link or Air Link** (Meta Quest Link app) | Meta Quest Link app → Settings → General → *OpenXR Runtime*: set Meta Quest Link as active. Connect Link, then start the game from the PC |
-| **Virtual Desktop** (Quest, Pico) | Its own runtime (VDXR) is found automatically: start Virtual Desktop, then the game from its desktop. In SteamVR mode it goes through SteamVR instead |
+| **[SteamVR](https://store.steampowered.com/app/250820/SteamVR/)** (Valve Index, HTC Vive, Pico through Streaming Assistant, Quest through Steam Link or ALVR, any SteamVR headset) | Start SteamVR, then the game. If another runtime is the default, either pick SteamVR in RepoXR's runtime selector or make it the default: SteamVR → Settings → OpenXR → *Set SteamVR as OpenXR Runtime* |
+| **Meta Quest through Link or Air Link** ([Meta Horizon Link app](https://www.meta.com/help/quest/1517439565442928/), formerly Meta Quest Link) | Meta Quest Link app → Settings → General → *OpenXR Runtime*: set Meta Quest Link as active. Connect Link, then start the game from the PC |
+| **[Virtual Desktop](https://www.vrdesktop.net/)** (Quest, Pico; the Streamer app on the PC) | Its own runtime (VDXR) is found automatically: start Virtual Desktop, then the game from its desktop. In SteamVR mode it goes through SteamVR instead |
 | **Other OpenXR runtimes** (Pico Connect, Windows Mixed Reality, ...) | Make the runtime the system default, or pick it in RepoXR's runtime selector |
 | **Without VR** | Launch option `--disable-vr`, or `DisableVR = true` in the config. You still see VR players' hands |
 

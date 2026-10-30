@@ -31,7 +31,12 @@
 
 ## Установка на ПК
 
-1. Скачайте самый новый `RepoXR-repo0.5.0-…-all-in-one.zip` из [релизов](https://github.com/crimecock/RepoXR/releases).
+**Нужно:** R.E.P.O. 0.5.0 в [Steam](https://store.steampowered.com/app/3241660/REPO/) (Windows), VR-шлем для ПК и
+его программа на ПК — для Quest: [Meta Horizon Link](https://www.meta.com/help/quest/1517439565442928/) (Link / Air Link) или [Virtual Desktop](https://www.vrdesktop.net/);
+другие шлемы: [SteamVR](https://store.steampowered.com/app/250820/SteamVR/). Больше ничего: BepInEx — в архиве.
+
+1. Скачайте самый новый архив «всё в одном»: сейчас **alpha 6** — [RepoXR-repo0.5.0-alpha.6-all-in-one.zip](https://github.com/crimecock/RepoXR/releases/download/v1.2.3-repo0.5.0-alpha.6/RepoXR-repo0.5.0-alpha.6-all-in-one.zip)
+   (все версии — [релизы](https://github.com/crimecock/RepoXR/releases)).
 2. Откройте папку игры: Steam → R.E.P.O. → Свойства → Установленные файлы → Обзор (папка с `REPO.exe`).
 3. Распакуйте туда весь архив. В нём BepInEx, FixPluginTypesSerialization и RepoXR — больше ничего ставить не нужно.
    Если раньше там стоял RepoXR 1.2.3, сначала удалите `BepInEx/plugins/RepoXR` и `BepInEx/patchers/RepoXR`.
@@ -64,8 +69,8 @@
 | Лазание в кувырке | ✅ | ✅ тот же код |
 | Новость в главном меню (справа внизу) | ✅ alpha 3 | ✅ тот же код |
 | Техника | ✅ | ✅ тот же код |
-| Меню настроек, страница управления VR | ✅ alpha 4–5 | ✅ тот же код (1.0.7-qc24) |
-| Зеркало в магазине | ✅ alpha 5 (*VR Settings → Rendering → Shop Mirror*, вкл.) | ✅ по умолчанию скрыто (в single-pass одно отражение на оба глаза); работает с выключенным single-pass |
+| Меню настроек, страница управления VR | ✅ alpha 4–6 | ✅ тот же код; страница управления на Quest 3 — с 1.0.7-qc27 |
+| Зеркало в магазине | ✅ alpha 5 (*VR Settings → Rendering → Shop Mirror*, вкл.) | ✅ по умолчанию скрыто (в single-pass одно отражение на оба глаза); видно с *VR Settings → Rendering → Render Mode = Multipass* |
 | Мультиплеер с другими игроками | ✅ | ✅ |
 
 ## Известные проблемы
