@@ -14,18 +14,31 @@ namespace RepoXR.UI;
 internal static class GameFonts
 {
     private static bool done;
+    private static bool reportedMissing;
 
     public static void FixBundlePrefabs()
     {
         if (done)
             return;
 
+        // The menu's font if there is one, else TMP's default, else any loaded font that works. (1.0.7-qc11 to qc14
+        // also wanted an atlas texture: Unity 6's dynamic fonts have none until they render a glyph, so no font ever
+        // qualified, the bundle's texts stayed broken, and a level whose RepoXR prefabs show text threw on every
+        // instantiation: no VR camera setup, no HUD, no rays)
         var reference = Object.FindObjectsOfType<MenuButton>(true)
-            .Select(b => b.buttonText ? b.buttonText.font : null)
-            .FirstOrDefault(Usable);
+                            .Select(b => b.buttonText ? b.buttonText.font : null)
+                            .FirstOrDefault(Usable) ??
+                        (Usable(TMP_Settings.defaultFontAsset) ? TMP_Settings.defaultFontAsset : null) ??
+                        Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(Usable);
         if (!reference)
         {
-            Logger.LogWarning("[Fonts] no game menu font found yet");
+            if (!reportedMissing)
+            {
+                reportedMissing = true;
+                Logger.LogWarning("[Fonts] no usable font yet; loaded: " + string.Join(", ",
+                    Resources.FindObjectsOfTypeAll<TMP_FontAsset>().Select(f =>
+                        $"{f.name} (material {(f.material ? f.material.name : "none")}, atlases {f.atlasTextures?.Length ?? 0})")));
+            }
             return;
         }
 
@@ -68,7 +81,8 @@ internal static class GameFonts
     {
         try
         {
-            return font && font!.material && font.atlasTexture;
+            // What TMP's MaterialReference needs: the bundle's fonts arrive without a working material
+            return font && font!.material && font.material.shader;
         }
         catch
         {

@@ -20,6 +20,9 @@ internal static class Entrypoint
     /// </summary>
     internal static void SetupDefaultSceneVR()
     {
+        // Quest port: before any of RepoXR's prefabs is instantiated in this scene
+        GameFonts.FixBundlePrefabs();
+
         // We grab all these references manually as most of the instances aren't set yet
         // Since most of them run in the "Start" lifetime function
 
@@ -192,6 +195,7 @@ internal static class Entrypoint
 
     private static void OnStartupInGame()
     {
+        GameFonts.FixBundlePrefabs();
         GameDirector.instance.gameObject.AddComponent<VRSession>();
     }
 }
