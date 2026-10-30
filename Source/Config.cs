@@ -205,9 +205,10 @@ public class Config(string assemblyPath, ConfigFile file)
         new ConfigDescription("The amount of smoothing that is applied to the custom camera.",
             new AcceptableValueRange<float>(0, 1)));
 
-    // [ConfigDescriptor(customName: "Render Mode", trueText: "Single Pass", falseText: "Multipass")]
+    // Quest port: shown on the Quest (single-pass is its default; multi-pass shows the shop mirror, at a frame rate cost)
+    [ConfigDescriptor(customName: "Render Mode", trueText: "Single Pass", falseText: "Multipass"), QuestOnly]
     public ConfigEntry<bool> SinglePassRendering { get; } = file.Create("Rendering", nameof(SinglePassRendering), Plugin.IsQuest,
-        "Whether to render both eyes in a single pass (multiview) instead of one pass per eye. On Quest this roughly halves the rendering work (measured 54 -> 71 FPS on Manor) and post-processing is fixed for it; turn it off if something only shows in one eye.");
+        "Whether to render both eyes in a single pass (multiview) instead of one pass per eye. On Quest this roughly halves the rendering work (measured 54 -> 71 FPS on Manor) and post-processing is fixed for it; turn it off if something only shows in one eye. Multipass also shows the shop mirror. Restart the game after changing it.");
 
     // Internal configuration
 

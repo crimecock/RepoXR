@@ -36,7 +36,8 @@ internal static class MirrorPatches
     private static readonly List<XRDisplaySubsystem> displays = [];
     internal static Action<MirrorReflection, Camera.StereoscopicEye, Vector3, Matrix4x4>? AfterEyeRender;
 
-    private static bool SinglePass => Plugin.Config.SinglePassRendering.Value;
+    // The render mode the game started with (changing it takes a restart)
+    private static readonly bool SinglePass = Plugin.Config.SinglePassRendering.Value;
     private static bool Shown => Plugin.Config.ShopMirror.Value && !SinglePass;
 
     [HarmonyPatch(typeof(MirrorReflection), nameof(MirrorReflection.OnEnable))]

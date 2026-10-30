@@ -50,6 +50,46 @@ public class VRInputSystem : MonoBehaviour
             JsonConvert.DeserializeObject<Dictionary<string, bool>>(Plugin.Config.InputToggleBindings.Value) ?? [];
     }
 
+    private float nextSchemeCheck;
+
+    /// <summary>
+    /// RepoXR's control schemes name the controller layouts they need (Oculus Touch, Quest Pro, Index, ...). A Quest 3
+    /// on its own runtime reports Touch Plus controllers, which no scheme names: the input still worked (the bindings
+    /// are on generic XR controllers), but there was no control scheme, and the controls page said "DISCONNECTED" and
+    /// allowed no rebinding. With XR controllers present and no scheme, the closest scheme is picked for them
+    /// </summary>
+    private void Update()
+    {
+        if (!string.IsNullOrEmpty(playerInput.currentControlScheme) || Time.unscaledTime < nextSchemeCheck)
+            return;
+
+        nextSchemeCheck = Time.unscaledTime + 1;
+
+        var controllers = new List<InputDevice>();
+        foreach (var device in InputSystem.devices)
+            if (device is UnityEngine.InputSystem.XR.XRController && device.added)
+                controllers.Add(device);
+
+        if (controllers.Count == 0)
+            return;
+
+        var layouts = string.Join(", ", controllers.ConvertAll(device => device.layout));
+        var scheme = layouts.IndexOf("Quest", StringComparison.OrdinalIgnoreCase) >= 0 ? "Meta Quest" : "Oculus";
+        if (playerInput.actions.FindControlSchemeIndex(scheme) < 0)
+            scheme = "Oculus";
+
+        try
+        {
+            playerInput.SwitchCurrentControlScheme(scheme, controllers.ToArray());
+            Logger.LogInfo($"No control scheme matched the controllers ({layouts}): using {scheme}");
+        }
+        catch (Exception e)
+        {
+            Logger.LogWarning($"No control scheme matched the controllers ({layouts}), and {scheme} could not be used: {e.Message}");
+            nextSchemeCheck = Time.unscaledTime + 30;
+        }
+    }
+
     private const string MenuButton = "<XRController>{LeftHand}/{MenuButton}";
 
     /// <summary>
