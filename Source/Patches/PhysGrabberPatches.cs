@@ -269,4 +269,56 @@ internal static class PhysGrabberUniversalPatches
                 : grabber.climbStickTransform.rotation;
         }
     }
+
+    private static float nextGrabReport;
+    private static int grabReports;
+
+    /// <summary>
+    /// Quest port, diagnostics for R.E.P.O. 0.5.0: the VR input the grabber sees. A few reports after a level loads
+    /// (control scheme, devices, the Grab/Movement/Interact actions), and one line per Grab press or release with the
+    /// grabber's state ("[Grab] ...")
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
+    [HarmonyPostfix]
+    private static void GrabInputReport(PhysGrabber __instance)
+    {
+        if (!__instance.isLocal)
+            return;
+
+        try
+        {
+            var input = VRInputSystem.Instance;
+            var grab = Actions.Instance["Grab"];
+            if (grabReports < 6 && Time.unscaledTime >= nextGrabReport)
+            {
+                nextGrabReport = Time.unscaledTime + 5f;
+                grabReports++;
+                var player = input.GetPlayerInput();
+                Logger.LogInfo($"[Grab] input: scheme {input.CurrentControlScheme}, active {player.inputIsActive}, map {player.currentActionMap?.name}, " +
+                               $"devices [{string.Join(", ", System.Linq.Enumerable.Select(player.devices, d => d.layout))}]");
+                foreach (var name in new[] { "Grab", "Movement", "Interact", "Menu", "Jump" })
+                {
+                    var action = Actions.Instance[name];
+                    Logger.LogInfo(action == null
+                        ? $"[Grab] action {name}: missing"
+                        : $"[Grab] action {name}: enabled {action.enabled}, bindings [{string.Join("; ", System.Linq.Enumerable.Select(action.bindings, b => b.effectivePath))}], " +
+                          $"controls [{string.Join("; ", System.Linq.Enumerable.Select(action.controls, c => c.path))}], phase {action.phase}");
+                }
+            }
+
+            if (grab != null && (grab.WasPressedThisFrame() || grab.WasReleasedThisFrame()))
+                Logger.LogInfo($"[Grab] {(grab.WasPressedThisFrame() ? "pressed" : "released")}: hold {SemiFunc.InputHold(InputKey.Grab)}, down {SemiFunc.InputDown(InputKey.Grab)}, " +
+                               $"toggle {InputManager.instance.InputToggleGet(InputKey.Grab)}, grabbed {__instance.grabbed}, beam {__instance.physGrabBeamActive}, " +
+                               $"disable timer {__instance.grabDisableTimer:F2}, looking at {(__instance.currentlyLookingAtPhysGrabObject ? __instance.currentlyLookingAtPhysGrabObject.name : "-")}, " +
+                               $"input disabled {(PlayerController.instance ? PlayerController.instance.InputDisableTimer : -1):F2}, avatar disabled {__instance.playerAvatar.isDisabled}");
+        }
+        catch (System.Exception e)
+        {
+            if (grabReports < 7)
+            {
+                grabReports++;
+                Logger.LogWarning($"[Grab] report failed: {e}");
+            }
+        }
+    }
 }

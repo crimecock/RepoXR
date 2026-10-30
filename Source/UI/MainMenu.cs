@@ -32,6 +32,7 @@ public class MainMenu : MonoBehaviour
         yield return null;
         
         DisableEventSystem();
+        GameFonts.FixBundlePrefabs();
         SetupMainCamera();
         SetupMainCanvas();
         SetupControllers();
