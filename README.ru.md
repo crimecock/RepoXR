@@ -87,7 +87,8 @@ R.E.P.O. 0.4.4 и Unity 2022, поэтому этот форк берёт их �
 
 **Сами архивы релиза** («всё в одном» с BepInEx и FixPluginTypesSerialization и архив RepoXR для Gale):
 `python3 tools/package/make_release.py alpha.7` собирает оба с нуля, каждое скачивание проверяется по SHA-256; что
-внутри и откуда — [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза).
+внутри и откуда — [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза). Выпуск новой версии (здесь и для Quest) —
+[releasing.ru.md](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/releasing.ru.md).
 
 ## Состояние и что пришлось починить
 

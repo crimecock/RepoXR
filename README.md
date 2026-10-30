@@ -107,7 +107,8 @@ With `-p:DebugSymbols=false` the DLL has exactly the release's code. Other folde
 
 **The release zips themselves** (the all-in-one with BepInEx and FixPluginTypesSerialization, and the RepoXR zip for
 Gale): `python3 tools/package/make_release.py alpha.7` builds both from scratch, every download checked by SHA-256;
-what goes in and from where: [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза).
+what goes in and from where: [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза). Releasing a new version
+(here and for the Quest): [releasing.md](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/releasing.md).
 
 **По-русски.** Чтобы играть, собирать ничего не нужно. Мод компилируется по DLL самой игры; RepoXR от DaXcess берёт их
 из NuGet, но там только R.E.P.O. 0.4.4, поэтому форк берёт их из **вашей установленной игры**. Шаги: поставить

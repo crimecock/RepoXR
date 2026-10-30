@@ -99,6 +99,15 @@ FixPluginTypesSerialization и неизменные части RepoXR 1.2.3 — 
 или сами (`--unity-project` с Quest-проектом repo-quest-vr), ваша `RepoXR.dll`. Каждое скачивание проверяется по
 SHA-256. С DLL alpha 6 архив «всё в одном» выходит побайтно как в релизе alpha 6.
 
+### Releasing · Выпуск
+
+A release here: `CHANGELOG.md` `# Unreleased` → `# 1.2.3-repo0.5.0-alpha.N (unofficial fork)`, the README (status,
+known issues, the direct link to the new all-in-one zip), `make_release.py alpha.N`, then a GitHub release with tag
+`v1.2.3-repo0.5.0-alpha.N` and both zips. The same code then goes to the Quest build as a patch. The whole checklist
+for both repositories, where each version string lives and what must not break: [releasing.md](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/releasing.md).
+· Выпуск: журнал, README (прямая ссылка на новый архив), `make_release.py alpha.N`, релиз с тегом и двумя архивами;
+потом тот же код идёт в сборку Quest патчем. Полный список для обеих реп — [releasing.ru.md](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/releasing.ru.md).
+
 The rest of this file is DaXcess's original guide for RepoXR on R.E.P.O. 0.4.4.
 
 ## Initial setup
