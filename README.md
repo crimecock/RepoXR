@@ -105,6 +105,10 @@ but NuGet only has R.E.P.O. 0.4.4 and Unity 2022, so this fork takes them from *
 With `-p:DebugSymbols=false` the DLL has exactly the release's code. Other folders, macOS / Linux, troubleshooting:
 [COMPILING.md](COMPILING.md).
 
+**The release zips themselves** (the all-in-one with BepInEx and FixPluginTypesSerialization, and the RepoXR zip for
+Gale): `python3 tools/package/make_release.py alpha.7` builds both from scratch, every download checked by SHA-256;
+what goes in and from where: [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза).
+
 **По-русски.** Чтобы играть, собирать ничего не нужно. Мод компилируется по DLL самой игры; RepoXR от DaXcess берёт их
 из NuGet, но там только R.E.P.O. 0.4.4, поэтому форк берёт их из **вашей установленной игры**. Шаги: поставить
 [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) (на .NET 8 — ошибки `CS0106`), сначала установить мод

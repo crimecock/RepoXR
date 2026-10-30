@@ -4,4 +4,5 @@
 /.vs
 /.idea
 /obj
-/bin
+/bin/work
+/dist

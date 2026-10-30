@@ -174,6 +174,8 @@ R.E.P.O. из Steam как обычно, со шлемом и запущенно
 
 По папке игры: `dotnet build RepoXR.sln -c Release -p:GamePath=<папка с REPO_Data>`, в папку игры должен быть распакован архив «всё в одном» (XR-пакеты под Unity 6). По шагам: [COMPILING.md](../COMPILING.md#this-fork-repo-050--этот-форк).
 
+Архивы релиза: `python3 tools/package/make_release.py <версия>` ([COMPILING.md](../COMPILING.md#the-release-zips--архивы-релиза)).
+
 XR-библиотеки релиза: [`tools/xr-deps/build.py`](../tools/xr-deps/build.py) заново компилирует шесть XR-пакетов под
 Windows из проекта Unity 6, где они есть и который один раз собирался в плеер (подходит Quest-проект repo-quest-vr).
 Скрипт берёт аргументы компилятора, с которыми собирал Unity (`Library/Bee/artifacts/*P.dag/<сборка>.rsp`), меняет

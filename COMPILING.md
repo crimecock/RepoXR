@@ -57,6 +57,46 @@ R.E.P.O. 0.5.0**, а XR-библиотеки под Unity 6 — из архив�
 С `-p:DebugSymbols=false` код совпадает с релизом. Ошибки — в таблице выше. Пошагово по-русски — в
 [README.ru.md](README.ru.md#сборка-из-исходников).
 
+### The release zips · Архивы релиза
+
+`tools/package/make_release.py` (Python 3, nothing to install) makes both zips of a release from scratch:
+
+```sh
+python3 tools/package/make_release.py alpha.7
+```
+
+- `dist/RepoXR-repo0.5.0-alpha.7.zip`: RepoXR alone, as a Thunderstore-style package (manifest, icon, README,
+  CHANGELOG) for Gale;
+- `dist/RepoXR-repo0.5.0-alpha.7-all-in-one.zip`: everything to unpack into the game folder.
+
+What goes in, and from where (every download is checked by SHA-256 and kept in `work/downloads`):
+
+| Part | From | Why |
+|---|---|---|
+| `RepoXR.dll` | your build (`bin/Release/netstandard2.1`, or `--dll`) | the mod |
+| BepInEx 5.4.23.5 (all-in-one only) | [BepInEx's GitHub release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5) | the mod loader; 5.4.23.5 fixes its log under Unity 6 |
+| FixPluginTypesSerialization 1.1.1 (all-in-one only) | [DaXcess's package on Thunderstore](https://thunderstore.io/c/repo/p/DaXcess/FixPluginTypesSerialization/) | lets Unity see the mod's serializable types; works on Unity 6000.3 |
+| `RepoXR.Preload.dll`, `repoxrassets`, `Addressables/` | [DaXcess's RepoXR 1.2.3 on Thunderstore](https://thunderstore.io/c/repo/p/DaXcess/RepoXR/) | unchanged: the preloader, RepoXR's asset bundle and translations |
+| Unity 6 XR libraries (`RuntimeDeps`) and `UnityOpenXR.dll`, `openxr_loader.dll` | this fork's alpha 6 release, or built yourself (below) | RepoXR 1.2.3 ships Unity 2022 ones, which do not load in Unity 6 |
+| `LICENSE`, `README.md`, `CHANGELOG.md`, `RepoXR-README.txt` | this repository | |
+
+To build the XR libraries yourself too, you need a Unity 6 project with the XR packages that was built once for a
+player. repo-quest-vr's Quest project is one: after a Quest build it is `~/RepoQuest/work/unity/REPOQuest`.
+
+```sh
+python3 tools/package/make_release.py alpha.7 --unity-project ~/RepoQuest/work/unity/REPOQuest --game ~/RepoQuest/game --dotnet ~/.dotnet10/dotnet
+```
+
+[`tools/xr-deps/build.py`](tools/xr-deps/build.py) compiles each XR package again with the arguments Unity used, for
+Windows and against the PC game's DLLs; the native OpenXR DLLs come from the project's OpenXR package (1.14.3,
+`Runtime/windows/x64` and `RuntimeLoaders/windows/x64`).
+
+Checked: with alpha 6's DLL, the all-in-one zip comes out byte for byte as the alpha 6 release (SHA-256 6063f8fb…).
+· **По-русски:** `python3 tools/package/make_release.py alpha.7` собирает оба архива релиза с нуля: BepInEx — с GitHub,
+FixPluginTypesSerialization и неизменные части RepoXR 1.2.3 — с Thunderstore, XR-библиотеки Unity 6 — из релиза alpha 6
+или сами (`--unity-project` с Quest-проектом repo-quest-vr), ваша `RepoXR.dll`. Каждое скачивание проверяется по
+SHA-256. С DLL alpha 6 архив «всё в одном» выходит побайтно как в релизе alpha 6.
+
 The rest of this file is DaXcess's original guide for RepoXR on R.E.P.O. 0.4.4.
 
 ## Initial setup

@@ -172,6 +172,8 @@ grab from the camera or the mouse had to follow the hand.
 
 Against your game folder: `dotnet build RepoXR.sln -c Release -p:GamePath=<the folder with REPO_Data>`, with the all-in-one zip unpacked there for the Unity 6 XR packages. Steps: [COMPILING.md](../COMPILING.md#this-fork-repo-050--этот-форк).
 
+The release zips: `python3 tools/package/make_release.py <version>` ([COMPILING.md](../COMPILING.md#the-release-zips--архивы-релиза)).
+
 The XR runtime libraries of the release: [`tools/xr-deps/build.py`](../tools/xr-deps/build.py) compiles the six XR
 packages again for Windows from a Unity 6 project that has them and was built once for a player (repo-quest-vr's
 Quest project is one). It takes the compiler arguments Unity used (`Library/Bee/artifacts/*P.dag/<assembly>.rsp`),
