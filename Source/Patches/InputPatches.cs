@@ -444,12 +444,30 @@ internal static class InputPatches
     {
         var __instance = InputManager.instance;
         // Glyph texts refresh before InputManager has started (seen on 0.5.0): let the game handle those
-        if (__instance == null || __instance.tagDictionary == null)
+        if (__instance == null || (__instance.tagDictionary == null && InputGlyphs.tagDictionary == null))
             return true;
 
-        var _text = __instance.tagDictionary.Aggregate(__0,
-            (current, keyValuePair) => current.Replace(keyValuePair.Key,
-                __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up)));
+        if (string.IsNullOrEmpty(__0))
+        {
+            __result = __0;
+            return false;
+        }
+
+        // 0.5.0 keeps its tags ([move], [grab], ...) in InputGlyphs.tagDictionary (a tag can stand for several keys);
+        // InputManager.tagDictionary is still there but nothing fills it, and with it every tag stayed as it was:
+        // "Use [move] to move" in the tutorial, the chat prompt, the skip texts
+        var _text = __0;
+        if (InputGlyphs.tagDictionary is { Count: > 0 } glyphTags)
+        {
+            foreach (var (tag, keys) in glyphTags)
+                if (_text.Contains(tag))
+                    _text = _text.Replace(tag, string.Join("/", keys.Select(key =>
+                        __instance.InputDisplayGet(key, KeyType.InputKey, MovementDirection.Up)).Distinct()));
+        }
+        else
+            _text = __instance.tagDictionary.Aggregate(_text,
+                (current, keyValuePair) => current.Replace(keyValuePair.Key,
+                    __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up)));
 
         __result = _text;
 
