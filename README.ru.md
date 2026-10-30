@@ -56,6 +56,21 @@
 3. Gale: импортируйте новый архив в профиль (или удалите там RepoXR и добавьте новый).
 4. Какая версия запущена — видно по первой строке RepoXR в `BepInEx/LogOutput.log`.
 
+## Сборка из исходников
+
+В NuGet есть только R.E.P.O. 0.4.4, поэтому форк собирается по папке игры (с распакованным в неё архивом «всё в
+одном»). Нужны [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) (RepoXR написан на C# 14, .NET 8 падает
+с `CS0106`) и интернет для NuGet:
+
+```sh
+git clone https://github.com/crimecock/RepoXR.git -b repo-0.5.0
+cd RepoXR
+dotnet build RepoXR.sln -c Release -p:GamePath="C:\Program Files (x86)\Steam\steamapps\common\REPO"
+```
+
+`RepoXR.dll` появится в `bin/Release/netstandard2.1`; положите его вместо `BepInEx/plugins/RepoXR/RepoXR.dll`. С
+`-p:DebugSymbols=false` код совпадает с релизом. Подробно, macOS и Linux — [COMPILING.md](COMPILING.md).
+
 ## Состояние и что пришлось починить
 
 | | ПК (этот форк) | Quest 3 без ПК ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr)) |
