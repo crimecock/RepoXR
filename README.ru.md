@@ -7,11 +7,21 @@
 (обновление на Unity 6), ветка `repo-0.5.0`.
 
 - **Quest 3, автономно.** Тот же код собирается в APK проектом
-  [repo-quest-vr](https://github.com/crimecock/repo-quest-vr). Играется: меню, одиночное лобби и уровни, трекинг
-  головы, лучи, захват.
+  [repo-quest-vr](https://github.com/crimecock/repo-quest-vr). Всё работает, как и на ПК.
 - **ПК (BepInEx).** Релиз в [Releases](https://github.com/crimecock/RepoXR/releases) — **играется в VR на Windows**
   (SteamVR, Virtual Desktop; контроллеры Quest): меню, уровни, магазин, захват, пушки, хлыст, лазание в кувырке,
   мультиплеер.
+
+## С чего начать
+
+| Хочу… | Читать |
+|---|---|
+| играть на ПК | [Установка](#установка-на-пк) (ниже), потом [управление](docs/controls.ru.md) |
+| обновиться | [Обновление](#обновление-repoxr-уже-стоит) |
+| играть на Quest без ПК | [repo-quest-vr](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/README.ru.md) |
+| поменять мод | [Сборка из исходников](#сборка-из-исходников), [COMPILING.md](COMPILING.md) |
+| собрать архивы релиза, выпустить версию | [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза), [releasing.ru.md](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/releasing.ru.md) |
+| понять, что поменял порт и почему | [Состояние](#состояние-и-что-пришлось-починить), [docs/repo-0.5.0.ru.md](docs/repo-0.5.0.ru.md) |
 
 ## Благодарности
 

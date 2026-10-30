@@ -6,6 +6,17 @@
 > changed, how to install it and the risks: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-русски](README.ru.md).
 > Report problems with this fork [here](https://github.com/crimecock/RepoXR/issues), not to DaXcess.
 
+**Start here · С чего начать**
+
+| I want to… · Хочу… | Read · Читать |
+|---|---|
+| play on PC · играть на ПК | [Install](#install-on-pc-repo-050--установка-на-пк) (below), then [controls](docs/controls.md) · [управление](docs/controls.ru.md) |
+| update · обновиться | [Updating](#install-on-pc-repo-050--установка-на-пк) (in Install) |
+| play on a Quest without a PC · играть на Quest без ПК | [repo-quest-vr](https://github.com/crimecock/repo-quest-vr) |
+| change the mod · поменять мод | [Build from source](#build-from-source--сборка-из-исходников), [COMPILING.md](COMPILING.md) |
+| make the release zips, release a version · собрать архивы, выпустить версию | [COMPILING.md](COMPILING.md#the-release-zips--архивы-релиза), [releasing.md](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/releasing.md) |
+| know what the port changed and why · что поменял порт и почему | [Status](#status-and-what-made-it-work--состояние-и-что-пришлось-починить), [docs/repo-0.5.0.md](docs/repo-0.5.0.md) |
+
 ## Credits · Благодарности
 
 Thanks to the people whose work this port stands on · спасибо авторам, на чьей работе стоит этот порт:
@@ -254,6 +265,12 @@ mutes · на Quest меню на ≡, X — микрофон ([Quest controls](
   [Dobutsu/repo-quest-vr](https://github.com/Dobutsu/repo-quest-vr) (the original Quest port).
 
 ---
+
+> [!NOTE]
+> **Below is DaXcess's original README** for RepoXR 1.2.3 on R.E.P.O. 0.4.4. Its install and build steps are not
+> for this fork: for R.E.P.O. 0.5.0 use [Install](#install-on-pc-repo-050--установка-на-пк) and
+> [Build from source](#build-from-source--сборка-из-исходников) above. · Ниже — оригинальный README DaXcess для 0.4.4;
+> его установка и сборка не для этого форка.
 
 # R.E.P.O. VR Mod
 
