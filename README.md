@@ -2,7 +2,7 @@
 > **This is an unofficial fork: RepoXR 1.2.3 ported to R.E.P.O. 0.5.0 (Unity 6).** Branch `repo-0.5.0`.
 > The same source plays on a Quest 3 in the standalone [repo-quest-vr](https://github.com/crimecock/repo-quest-vr)
 > build; the PC (BepInEx) release **plays in VR on Windows** (SteamVR, Virtual Desktop; Quest controllers): menus, levels,
-> the shop, grabbing, guns, the whip, tumble climbing, the settings menus, multiplayer. What
+> the shop and its mirror, grabbing, guns, the whip, tumble climbing, vehicles, the settings menus, multiplayer. What
 > changed, how to install it and the risks: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-русски](README.ru.md).
 > Report problems with this fork [here](https://github.com/crimecock/RepoXR/issues), not to DaXcess.
 
@@ -72,14 +72,15 @@ the version you are running.
 |---|---|---|
 | Starts in VR · запуск в VR | ✅ SteamVR, Virtual Desktop; Quest controllers | ✅ |
 | Menus, pointers · меню, лучи | ✅ | ✅ |
-| Lobby, levels, shop, head tracking · лобби, уровни, магазин, трекинг головы | ✅ | ✅ levels · уровни; shop: alpha 3 fix · магазин: исправление alpha 3 |
+| Lobby, levels, shop, head tracking · лобби, уровни, магазин, трекинг головы | ✅ | ✅ |
 | Grabbing · захват | ✅ | ✅ |
-| Guns · пушки | ✅ | to check · проверяется |
-| Whip: crack and fling by swinging the controller · хлыст: щелчок и бросок взмахом контроллера | ✅ alpha 3 | alpha 3 fix, to check · исправление, проверяется |
-| Tumble climb · лазание в кувырке | ✅ | to check · проверяется |
-| Main menu news popup (bottom right) · новость в главном меню | ✅ alpha 3 | alpha 3 fix, to check · исправление, проверяется |
-| Vehicles · техника | ✅ | to check · проверяется |
-| Settings menus, VR controls page · меню настроек, страница управления VR | ✅ alpha 4 | alpha 4 fix (1.0.7-qc23), to check · исправление alpha 4 (qc23), проверяется |
+| Guns · пушки | ✅ | ✅ same code · тот же код |
+| Whip: crack and fling by swinging the controller · хлыст: щелчок и бросок взмахом контроллера | ✅ alpha 3 | ✅ same code · тот же код |
+| Tumble climb · лазание в кувырке | ✅ | ✅ same code · тот же код |
+| Main menu news popup (bottom right) · новость в главном меню | ✅ alpha 3 | ✅ same code · тот же код |
+| Vehicles · техника | ✅ | ✅ same code · тот же код |
+| Settings menus, VR controls page · меню настроек, страница управления VR | ✅ alpha 4–5 | ✅ same code (1.0.7-qc24) · тот же код |
+| Shop mirror · зеркало в магазине | ✅ alpha 5 (*VR Settings → Rendering → Shop Mirror*, on · вкл.) | ✅ hidden by default (single-pass shares one reflection between the eyes); works with single-pass off · по умолчанию скрыто (в single-pass одно отражение на оба глаза); работает с выключенным single-pass |
 | Multiplayer with other players · мультиплеер с другими | ✅ | ✅ |
 
 ## Known issues · Известные проблемы
@@ -88,10 +89,8 @@ Being worked on; none of them stops the game. · Чиним; играть ни �
 
 | Issue · Проблема | Where · Где | Notes · Подробности |
 |---|---|---|
-| No chat in singleplayer · нет чата в одиночной игре | PC, Quest | As in R.E.P.O. 0.5.0 itself; works in multiplayer · так в самой игре; в мультиплеере работает |
 | The tutorial shows the game's texts (with the VR controller icons), not RepoXR's VR-specific ones · в обучении тексты игры (со значками контроллера), а не VR-тексты RepoXR | PC | 0.5.0's Addressables do not read RepoXR's JSON catalog on PC · Addressables 0.5.0 на ПК не читают JSON-каталог RepoXR |
 | Whip: fling only once it has caught something; sensitivity may need tuning · хлыст: бросок — только когда он что-то поймал; чувствительность может понадобиться подстроить | PC, Quest | VR Settings → Input → *Whip Sideways / Crack Sensitivity* |
-| The shop mirror (next to the cosmetic machine) shows a garbled reflection · зеркало в магазине (у косметического автомата) показывает кашу вместо отражения | PC, Quest | The game renders one flat reflection per frame, not one per eye · игра рисует одно плоское отражение на кадр, а не по одному на глаз |
 
 Found something else? Attach `BepInEx/LogOutput.log` to an [issue](https://github.com/crimecock/RepoXR/issues). ·
 Нашли что-то ещё? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
@@ -154,7 +153,14 @@ Found something else? Attach `BepInEx/LogOutput.log` to an [issue](https://githu
    which flip on a menu that hangs in 3D, and RepoXR's own toggles lacked 0.5.0's label fields; the *VR Settings*
    button no longer lands on *Back*. **Меню настроек и значки контроллера (alpha 4)**: значки вместо `?`, `[move]` в
    обучении, рамка переключателей, подписи, кнопка VR Settings — исправлено.
-9. Plus: renamed and new game APIs (16 patch classes), vehicles and their new keys on the left stick, guns aimed from
+9. **The shop mirror (alpha 5).** The game's reflection camera is an ordinary camera: with XR on it rendered as a
+   stereo camera, the eye matrices replaced its reflected view, and the mirror showed a mess. It now renders mono, once
+   for each eye, from that eye's reflected position with its own projection. With single-pass rendering both eyes
+   share one reflection texture, so the mirror is hidden there; *VR Settings → Rendering → Shop Mirror* (on) turns it
+   off for frame rate. The toggles in RepoXR's own menus show the right option too (alpha 5). **Зеркало в магазине
+   (alpha 5)** работает: камера отражения рисовала в стерео, теперь — по разу на глаз; в single-pass скрыто; настройка
+   *Shop Mirror*. Переключатели в меню RepoXR показывают выбранный вариант.
+10. Plus: renamed and new game APIs (16 patch classes), vehicles and their new keys on the left stick, guns aimed from
    the hand, the VR Settings button moved off the new *Language* tab, fonts of RepoXR's 2022 asset bundle.
    Ещё: переименованные API игры, техника на левом стике, прицел пушек от руки, кнопка VR Settings, шрифты.
 
@@ -164,7 +170,7 @@ Every change, patch by patch: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-
 
 | Quest / Touch controller | In game | В игре |
 |---|---|---|
-| Left stick · click · hold | Move · chat (multiplayer) · expression wheel | Ходьба · чат (мультиплеер) · колесо эмоций |
+| Left stick · click · hold | Move · chat · expression wheel | Ходьба · чат · колесо эмоций |
 | Left trigger · left grip | Sprint · rotate held object | Бег · вращать предмет |
 | **X** · Y | **Menu** · reset height | **Меню** · сбросить рост |
 | Right stick left/right · up/down · click | Turn · push/pull, scroll · crouch | Поворот · оттолкнуть/притянуть, прокрутка · присесть |

@@ -1,3 +1,16 @@
+# 1.2.3-repo0.5.0-alpha.5 (unofficial fork)
+
+**Changes**:
+- The shop mirror works in VR: the game's reflection camera rendered as a stereo camera, so the XR eye matrices
+  replaced its reflected view. It now renders mono, once for each eye just before that eye renders, from the eye's
+  reflected position with the eye's own (mirrored) projection
+- *VR Settings → Rendering → Shop Mirror* (on by default) hides the mirror; with single-pass rendering it is always
+  hidden, since both eyes would share one reflection texture
+- Toggles in RepoXR's own menus (VR Settings, the VR controls' hold/toggle) show the selected option: 0.5.0 only calls
+  their fetch event with its new `customFetch` flag, and puts the selection box where the game's own toggles have
+  their options
+- Tested on PC (SteamVR, Virtual Desktop): the mirror, the expression wheel (with the mirror), the VR settings toggles
+
 # 1.2.3-repo0.5.0-alpha.4 (unofficial fork)
 
 **Changes**:
