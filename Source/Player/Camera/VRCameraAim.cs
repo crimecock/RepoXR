@@ -249,6 +249,35 @@ internal static class CameraAimPatches
     [HarmonyPrefix]
     private static bool DisableCameraAim(CameraAim __instance)
     {
+        // The game's Update also expires the aim targets it forces on the camera (AimTargetSet: an enemy grabbing
+        // you, a valuable looking at you...). Without that, AimTargetActive stayed true for good once anything set it,
+        // and everything that waits for it to end stayed off; in R.E.P.O. 0.5.0 that includes the whip's crack and
+        // fling gestures (ItemMeleeWhip.GestureCanUse) and the grab cursor look. Only the bookkeeping runs here, the
+        // camera itself still follows the headset
+        var dt = Time.deltaTime;
+
+        if (__instance.AimTargetTimer > 0)
+        {
+            __instance.AimTargetTimer -= dt;
+            __instance.AimTargetLerp = Mathf.Clamp01(__instance.AimTargetLerp + dt * __instance.AimTargetSpeed);
+        }
+        else if (__instance.AimTargetLerp > 0 || __instance.AimTargetActive)
+        {
+            __instance.AimTargetLerp = 0;
+            __instance.AimTargetPriority = 999;
+            __instance.AimTargetActive = false;
+        }
+
+        if (__instance.AimTargetSoftTimer > 0 && __instance.AimTargetTimer <= 0 &&
+            !__instance.AimTargetSoftFollow.HasValue)
+        {
+            __instance.AimTargetSoftTimer -= dt;
+            if (__instance.AimTargetSoftTimer <= 0)
+                __instance.AimTargetSoftClear();
+        }
+
+        __instance.OverrideAimStopTick();
+
         return false;
     }
 

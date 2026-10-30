@@ -32,6 +32,7 @@ public class MainMenu : MonoBehaviour
         yield return null;
         
         DisableEventSystem();
+        GameFonts.FixBundlePrefabs();
         SetupMainCamera();
         SetupMainCanvas();
         SetupControllers();
@@ -52,6 +53,7 @@ public class MainMenu : MonoBehaviour
         var topCamera = mainCamera.transform.Find("Camera Top").GetComponent<Camera>();
         topCamera.depth = 1;
         topCamera.targetTexture = null;
+        Rendering.PostProcessingSetting.Apply(mainCamera, topCamera);
     }
 
     private void SetupMainCanvas()

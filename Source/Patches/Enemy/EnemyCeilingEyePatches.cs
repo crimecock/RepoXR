@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using BepInEx.Configuration;
 using HarmonyLib;
+using UnityEngine;
 using RepoXR.Assets;
 using RepoXR.Managers;
 using RepoXR.Player.Camera;
@@ -22,7 +23,8 @@ internal static class EnemyCeilingEyePatches
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraAim), nameof(CameraAim.AimTargetSoftSet))))
+                new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraAim), nameof(CameraAim.AimTargetSoftSet),
+                    [typeof(Vector3), typeof(float), typeof(float), typeof(float), typeof(GameObject), typeof(int)])))
             .Advance(-11)
             .SetOperandAndAdvance(Field(typeof(VRCameraAim), nameof(VRCameraAim.instance)))
             .Advance(10)

@@ -97,16 +97,20 @@ internal static class TutorialPatches
         var map = __instance.tutorialPages[12];
         var expressions = __instance.tutorialPages[25];
 
-        inventoryFill.localizedText = Utils.L("TUTORIAL.INVENTORY_FILL.TEXT");
-        inventoryFill.localizedDummyText = Utils.L("TUTORIAL.INVENTORY_FILL.DUMMY_TEXT");
+        // Without RepoXR's translations (PC on 0.5.0, see AssetCollection.LoadAssets) the game's texts stay
+        if (!AssetCollection.TranslationsLoaded)
+            return;
 
-        inventoryEmpty.localizedText = Utils.L("TUTORIAL.INVENTORY_EMPTY.TEXT");
-        inventoryEmpty.localizedDummyText = Utils.L("TUTORIAL.INVENTORY_EMPTY.DUMMY_TEXT");
+        inventoryFill.localizedText = Utils.L("TUTORIAL.INVENTORY_FILL.TEXT") ?? inventoryFill.localizedText;
+        inventoryFill.localizedDummyText = Utils.L("TUTORIAL.INVENTORY_FILL.DUMMY_TEXT") ?? inventoryFill.localizedDummyText;
 
-        map.localizedText = Utils.L("TUTORIAL.MAP.TEXT");
-        map.localizedDummyText = Utils.L("TUTORIAL.MAP.DUMMY_TEXT");
+        inventoryEmpty.localizedText = Utils.L("TUTORIAL.INVENTORY_EMPTY.TEXT") ?? inventoryEmpty.localizedText;
+        inventoryEmpty.localizedDummyText = Utils.L("TUTORIAL.INVENTORY_EMPTY.DUMMY_TEXT") ?? inventoryEmpty.localizedDummyText;
 
-        expressions.localizedText = Utils.L("TUTORIAL.EXPRESSIONS.TEXT");
+        map.localizedText = Utils.L("TUTORIAL.MAP.TEXT") ?? map.localizedText;
+        map.localizedDummyText = Utils.L("TUTORIAL.MAP.DUMMY_TEXT") ?? map.localizedDummyText;
+
+        expressions.localizedText = Utils.L("TUTORIAL.EXPRESSIONS.TEXT") ?? expressions.localizedText;
     }
 
     /// <summary>

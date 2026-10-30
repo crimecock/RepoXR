@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Linq;
 using RepoXR.Assets;
 using RepoXR.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.UI;
+using UnityEngine.UI;
 
 namespace RepoXR.UI;
 
@@ -31,6 +35,216 @@ public class XRRayInteractorManager : MonoBehaviour
         rightActions.uiPressAction.action.performed += RightControllerPressed;
         
         UpdateActiveController(ActiveController.Right);
+    }
+
+    private float nextInputReport;
+    private int inputReports;
+
+    // Quest port: what the Input System sees, a few times after the menu opens (devices, the UI press bindings and
+    // their values, the hand pose), to tell missing devices from unbound actions from a missed click
+    private void ReportInput()
+    {
+        var devices = string.Join(", ", InputSystem.devices.Select(d => $"{d.layout}{(d.enabled ? "" : " (disabled)")}"));
+        Logger.LogInfo($"[UI] input devices: {devices}");
+        foreach (var (hand, controller) in new[] { ("Left", leftActions), ("Right", rightActions) })
+        {
+            var press = controller.uiPressAction.action;
+            var position = controller.positionAction.action;
+            Logger.LogInfo(press == null
+                ? $"[UI] {hand} UI Press: no action"
+                : $"[UI] {hand} UI Press: enabled {press.enabled}, map {press.actionMap?.name} enabled {press.actionMap?.enabled}, " +
+                  $"bindings [{string.Join("; ", press.bindings.Select(b => b.effectivePath))}], " +
+                  $"controls [{string.Join("; ", press.controls.Select(c => c.path))}], pressed {press.IsPressed()}, " +
+                  $"position {(position == null ? "none" : $"{position.enabled} {position.controls.Count} controls {position.ReadValue<Vector3>()}")}");
+        }
+    }
+
+    private float nextModuleCheck;
+
+    /// <summary>
+    /// Quest port: the rays only see UI through XRI's XRUIInputModule, and an EventSystem runs one input module, the
+    /// current EventSystem one. R.E.P.O. 0.5.0's scene EventSystem has a StandaloneInputModule; when XRI put its module
+    /// elsewhere or the game's module stayed first, the rays hit nothing ("ray on nothing" with the trigger working).
+    /// Keep exactly one EventSystem, the one with the XRUIInputModule, and only that module enabled on it
+    /// </summary>
+    private static void EnsureXRUIInputModule()
+    {
+        var systems = FindObjectsOfType<EventSystem>(true);
+        var xrModule = FindObjectsOfType<XRUIInputModule>(true).FirstOrDefault();
+        if (!xrModule)
+        {
+            var host = EventSystem.current ? EventSystem.current : systems.FirstOrDefault();
+            if (!host)
+                return;
+            xrModule = host.gameObject.AddComponent<XRUIInputModule>();
+        }
+
+        var main = xrModule.GetComponent<EventSystem>();
+        var changes = new System.Collections.Generic.List<string>();
+        if (!xrModule.enabled)
+        {
+            xrModule.enabled = true;
+            changes.Add("XRUIInputModule enabled");
+        }
+        foreach (var module in main.GetComponents<BaseInputModule>())
+            if (module != xrModule && module.enabled)
+            {
+                module.enabled = false;
+                changes.Add($"{module.GetType().Name} off");
+            }
+        foreach (var system in systems)
+            if (system != main && system.enabled)
+            {
+                system.enabled = false;
+                changes.Add($"EventSystem '{system.name}' off");
+            }
+        if (!main.enabled || !main.gameObject.activeInHierarchy)
+        {
+            main.enabled = true;
+            main.gameObject.SetActive(true);
+            changes.Add($"EventSystem '{main.name}' on");
+        }
+        if (EventSystem.current != main)
+        {
+            EventSystem.current = main;
+            changes.Add($"current EventSystem '{main.name}'");
+        }
+
+        if (changes.Count > 0)
+            Logger.LogInfo($"[UI] input module: {string.Join(", ", changes)}; EventSystems: " +
+                           string.Join("; ", systems.Select(e => $"{e.name} [{string.Join(", ", e.GetComponents<BaseInputModule>().Select(m => m.GetType().Name + (m.enabled ? "" : " (off)")))}]")));
+    }
+
+    // Quest port: one log line per trigger press while a menu is up, to see why a click does or does not land
+    private void Update()
+    {
+        if (Time.unscaledTime >= nextModuleCheck)
+        {
+            nextModuleCheck = Time.unscaledTime + 1f;
+            try
+            {
+                EnsureXRUIInputModule();
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"[UI] input module check failed: {e.Message}");
+            }
+        }
+
+        if (inputReports < 6 && Time.unscaledTime >= nextInputReport)
+        {
+            nextInputReport = Time.unscaledTime + 5f;
+            inputReports++;
+            try
+            {
+                ReportInput();
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"[UI] input report failed: {e.Message}");
+            }
+        }
+
+        var (interactor, actions) = GetActiveInteractor();
+        if (!actions.uiPressAction.action.WasPressedThisFrame())
+            return;
+
+        var hit = TryGetUIHit(out var hitObject, out var hitWorld) ? $"{hitObject.name} ({uiHitSource})" : "nothing";
+        if (hitObject && hitObject.GetComponentInParent<MenuButton>() is { } button)
+        {
+            try
+            {
+                var rect = (RectTransform)button.transform;
+                var pagePos = SemiFunc.UIGetRectTransformPositionOnScreen(rect, false);
+                var pointer = GetUIHitPosition(rect);
+                var canvasLocal = rect.GetComponentInParent<Canvas>().transform.InverseTransformPoint(hitWorld);
+                var page = rect.GetComponentInParent<MenuPage>();
+                var manager = MenuManager.instance;
+                var hitCanvas = hitObject.GetComponentInParent<Canvas>();
+                var rectCanvas = rect.GetComponentInParent<Canvas>();
+                var selectable = button.menuSelectableElement;
+                var hovered = page && SemiFunc.UIMouseHover(page, rect, button.MenuID, 10, 0, button.menuScrollBox, button.scrollRect);
+                Logger.LogInfo($"[UI] hover check {button.name}: UIMouseHover {hovered}, page interactable {(page ? page.isInteractable : false)}, " +
+                               $"state {(page ? page.currentPageState.ToString() : "-")}, priority {(page ? page.interactionPriority : 0)}, blocked {(page ? page.interactionBlocked : false)}, " +
+                               $"highest open priority {(manager ? manager.HighestOpenPriority() : -1)}, selectable {(selectable ? selectable.IsInteractable() : false)}, " +
+                               $"canvases hit {(hitCanvas ? hitCanvas.name : "-")} / button {(rectCanvas ? rectCanvas.name : "-")}, " +
+                               $"ids {button.MenuID} / current '{(manager ? manager.currentMenuID : "-")}'");
+                if (manager)
+                    Logger.LogInfo("[UI] pages: " + string.Join("; ", manager.allPages.Where(x => x).Select(x =>
+                        $"{x.name} {x.currentPageState} prio {x.interactionPriority}{(x.isInteractable ? " interactable" : "")}{(x.interactionBlocked ? " blocked" : "")}")));
+                Logger.LogInfo($"[UI] hover {button.name}: element at {pagePos} size {rect.rect.size}, pointer {pointer} " +
+                               $"(canvas-local {canvasLocal}), page {(page ? page.name + " pos " + page.transform.localPosition + " scale " + page.transform.localScale : "none")}, " +
+                               $"menu id {button.menuSelectableElement?.menuID}");
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"[UI] hover report failed: {e}");
+            }
+        }
+        var menu = MenuManager.instance;
+        var current = EventSystem.current;
+        Logger.LogInfo($"[UI] event system {(current ? current.name : "none")}, module {(current && current.currentInputModule ? current.currentInputModule.GetType().Name : "none")}, " +
+                       $"UI interaction {interactor.enableUIInteraction}");
+        try
+        {
+            ProbeUIRay(interactor);
+        }
+        catch (Exception e)
+        {
+            Logger.LogWarning($"[UI] probe failed: {e}");
+        }
+        Logger.LogInfo($"[UI] trigger ({activeController}): ray on {hit}; menu target {(menu ? menu.currentMenuID : "-")}, " +
+                       $"keyboard navigating {(menu && menu.isKeyboardNavigating)}, page {(menu && menu.currentMenuPage ? menu.currentMenuPage.name : "-")}, " +
+                       $"input mode {SemiFunc.InputMode()}, UI click {SemiFunc.InputUIClick()}");
+    }
+
+    /// <summary>
+    /// Quest port: why the ray finds no UI. The interactor's own view (3D and UI hits), then the menu canvas checked by
+    /// hand: where the ray meets its plane, how far, whether that point is on the canvas, which raycast targets are
+    /// under it, the canvas's raycasters and masks, and colliders in the way
+    /// </summary>
+    private static void ProbeUIRay(XRRayInteractor interactor)
+    {
+        var origin = interactor.rayOriginTransform ? interactor.rayOriginTransform : interactor.transform;
+        var ray = new Ray(origin.position, origin.forward);
+        Logger.LogInfo($"[UI] probe: ray {ray.origin} -> {ray.direction}, max {interactor.maxRaycastDistance} m, " +
+                       $"line {interactor.lineType}, mask {interactor.raycastMask.value}");
+
+        Logger.LogInfo("[UI] probe event systems: " + string.Join("; ", FindObjectsOfType<EventSystem>(true).Select(e =>
+            $"{e.name} #{e.GetInstanceID()} {(e.enabled && e.gameObject.activeInHierarchy ? "on" : "off")}{(e == EventSystem.current ? " (current)" : "")} " +
+            $"[{string.Join(", ", e.GetComponents<BaseInputModule>().Select(m => $"{m.GetType().Name}{(m.enabled ? "" : " off")}"))}]")) +
+            $"; XRUIInputModules: {FindObjectsOfType<XRUIInputModule>(true).Length}");
+
+        var canvas = HUDCanvas.instance ? HUDCanvas.instance.GetComponent<Canvas>() : null;
+        if (!canvas)
+            return;
+        var t = canvas.transform;
+        var plane = new Plane(-t.forward, t.position);
+        var onPlane = plane.Raycast(ray, out var enter);
+        var point = ray.GetPoint(enter);
+        var local = t.InverseTransformPoint(point);
+        var rect = ((RectTransform)t).rect;
+        Logger.LogInfo($"[UI] probe canvas {canvas.name}: mode {canvas.renderMode}, pos {t.position}, rot {t.eulerAngles}, " +
+                       $"scale {t.lossyScale}, rect {rect}, worldCamera {(canvas.worldCamera ? canvas.worldCamera.name : "none")}, " +
+                       $"plane hit {onPlane} at {enter:F1} m, local {local}, inside {rect.Contains(local)}, facing {Vector3.Dot(ray.direction, t.forward) > 0}");
+        Logger.LogInfo("[UI] probe raycasters: " + string.Join(", ", canvas.GetComponents<BaseRaycaster>()
+            .Select(r => $"{r.GetType().Name}{(r.enabled ? "" : " (off)")}")) +
+            "; masks on the way down: " + string.Join(", ", canvas.GetComponentsInChildren<RectMask2D>(true).Take(5)
+            .Select(m => $"{m.name} {m.enabled} {((RectTransform)m.transform).rect}")));
+
+        var under = canvas.GetComponentsInChildren<Graphic>()
+            .Where(g => g.raycastTarget && g.isActiveAndEnabled)
+            .Where(g =>
+            {
+                var gl = g.rectTransform.InverseTransformPoint(point);
+                return g.rectTransform.rect.Contains(new Vector2(gl.x, gl.y));
+            })
+            .Select(g => g.name).Take(8).ToList();
+        Logger.LogInfo($"[UI] probe targets under the ray point: {(under.Count == 0 ? "none" : string.Join(", ", under))}");
+
+        var blockers = Physics.RaycastAll(ray, 100f).OrderBy(h => h.distance).Take(5)
+            .Select(h => $"{h.collider.name} (layer {h.collider.gameObject.layer}) @{h.distance:F1}");
+        Logger.LogInfo($"[UI] probe colliders on the ray: {string.Join(", ", blockers)}");
     }
 
     private void OnDestroy()
@@ -65,30 +279,137 @@ public class XRRayInteractorManager : MonoBehaviour
 
     public Vector2 GetUIHitPosition(RectTransform? rect)
     {
-        var (interactor, _) = GetActiveInteractor();
-        if (!interactor.TryGetCurrentUIRaycastResult(out var result))
+        if (!TryGetUIHit(out var hitObject, out var worldPosition))
             return Vector2.one * -1000;
 
-        var canvas = rect is null
-            ? result.gameObject.GetComponentInParent<Canvas>().transform
-            : rect.GetComponentInParent<Canvas>().transform;
-
-        var local = canvas.InverseTransformPoint(result.worldPosition);
+        var local = HitSpace(rect ? rect! : (RectTransform)hitObject.transform).InverseTransformPoint(worldPosition);
         return new Vector2(local.x, local.y);
     }
 
     public RectTransform GetUIHitRectTransform()
     {
-        var (interactor, _) = GetActiveInteractor();
-        return !interactor.TryGetCurrentUIRaycastResult(out var result)
+        return !TryGetUIHit(out var hitObject, out _)
             ? HUDCanvas.instance.GetComponent<RectTransform>()
-            : result.gameObject.GetComponent<RectTransform>();
+            : hitObject.GetComponent<RectTransform>();
+    }
+
+    /// <summary>
+    /// The space the pointer is given in: the element's menu page, like the element positions RepoXR hands the game
+    /// (UIPatches.UIGetRectTransformPositionOnCanvas), or its canvas outside menu pages. Upstream used the canvas for
+    /// the pointer, which matched while 0.4.4's menu pages sat at the canvas origin; 0.5.0's do not (Quest port)
+    /// </summary>
+    private static Transform HitSpace(RectTransform element)
+    {
+        var page = element.GetComponentInParent<MenuPage>();
+        return page ? page.transform : element.GetComponentInParent<Canvas>().transform;
+    }
+
+    private int uiHitFrame = -1;
+    private bool uiHitValid;
+    private GameObject uiHitObject;
+    private Vector3 uiHitWorld;
+    private string uiHitSource = "-";
+    private float nextRaycasterRefresh;
+    private TrackedDeviceGraphicRaycaster[] raycasters = [];
+
+    /// <summary>
+    /// The UI under the active pointer: XRI's own result, or (Quest port) the same found by hand. On R.E.P.O. 0.5.0 /
+    /// Unity 6 XRI's UI raycast reports nothing although the trigger, the rays and the input module work, so the
+    /// pointer is intersected with every world-space canvas that has a TrackedDeviceGraphicRaycaster, and the topmost
+    /// raycast target under that point wins. Once per frame; the menus ask for it many times a frame
+    /// </summary>
+    public bool TryGetUIHit(out GameObject hitObject, out Vector3 worldPosition)
+    {
+        if (uiHitFrame != Time.frameCount)
+        {
+            uiHitFrame = Time.frameCount;
+            try
+            {
+                ComputeUIHit();
+            }
+            catch (Exception e)
+            {
+                uiHitValid = false;
+                Logger.LogWarning($"[UI] pointer hit failed: {e}");
+            }
+        }
+
+        hitObject = uiHitObject;
+        worldPosition = uiHitWorld;
+        return uiHitValid;
+    }
+
+    private void ComputeUIHit()
+    {
+        var (interactor, _) = GetActiveInteractor();
+        if (interactor.TryGetCurrentUIRaycastResult(out var result) && result.gameObject)
+        {
+            uiHitValid = true;
+            uiHitObject = result.gameObject;
+            uiHitWorld = result.worldPosition;
+            uiHitSource = "xri";
+            return;
+        }
+
+        uiHitValid = false;
+        uiHitObject = null!;
+        uiHitSource = "none";
+        if (Time.unscaledTime >= nextRaycasterRefresh)
+        {
+            nextRaycasterRefresh = Time.unscaledTime + 1f;
+            raycasters = FindObjectsOfType<TrackedDeviceGraphicRaycaster>();
+        }
+
+        var origin = interactor.rayOriginTransform ? interactor.rayOriginTransform : interactor.transform;
+        var ray = new Ray(origin.position, origin.forward);
+        var best = float.MaxValue;
+        var bestDepth = -1;
+        foreach (var raycaster in raycasters)
+        {
+            if (!raycaster || !raycaster.isActiveAndEnabled)
+                continue;
+            var canvas = raycaster.GetComponent<Canvas>();
+            if (!canvas || canvas.renderMode != RenderMode.WorldSpace)
+                continue;
+            var plane = new Plane(canvas.transform.forward, canvas.transform.position);
+            if (!plane.Raycast(ray, out var distance) && distance >= 0)
+                continue;
+            if (distance < 0 || distance > interactor.maxRaycastDistance || distance > best + 0.001f)
+                continue;
+            var point = ray.GetPoint(distance);
+            var graphics = GraphicRegistry.GetRaycastableGraphicsForCanvas(canvas);
+            for (var i = 0; i < graphics.Count; i++)
+            {
+                var graphic = graphics[i];
+                if (!graphic || !graphic.raycastTarget || !graphic.isActiveAndEnabled || graphic.canvasRenderer.cull ||
+                    graphic.depth < 0)
+                    continue;
+                var local = graphic.rectTransform.InverseTransformPoint(point);
+                if (!graphic.rectTransform.rect.Contains(new Vector2(local.x, local.y)))
+                    continue;
+                if (distance < best - 0.001f || graphic.depth > bestDepth)
+                {
+                    best = distance;
+                    bestDepth = graphic.depth;
+                    uiHitValid = true;
+                    uiHitObject = graphic.gameObject;
+                    uiHitWorld = point;
+                    uiHitSource = "manual";
+                }
+            }
+        }
     }
 
     public bool GetTriggerDown()
     {
         var (_, actions) = GetActiveInteractor();
         return actions.uiPressAction.action.WasPressedThisFrame();
+    }
+
+    public bool GetTriggerUp()
+    {
+        var (_, actions) = GetActiveInteractor();
+        return actions.uiPressAction.action.WasReleasedThisFrame();
     }
 
     public bool GetTriggerButton()
@@ -196,6 +517,9 @@ public class XRRayInteractorManager : MonoBehaviour
         var renderer = go.GetComponent<LineRenderer>();
         
         interactor.raycastMask = 1 << 5;
+        // Quest port: R.E.P.O. 0.5.0's main menu room puts the menu canvas 20-25 m from the camera; XRI's default reach
+        // is 30 m, a ray at an angle from the hand could fall short
+        interactor.maxRaycastDistance = 100f;
 
         visual.lineBendRatio = 1;
         visual.invalidColorGradient = new Gradient

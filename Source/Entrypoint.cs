@@ -6,7 +6,9 @@ using RepoXR.Networking;
 using RepoXR.Patches;
 using RepoXR.Player.Camera;
 using RepoXR.UI;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
@@ -18,15 +20,31 @@ internal static class Entrypoint
     /// <summary>
     /// The default setup for VR for every scene
     /// </summary>
-    internal static void SetupDefaultSceneVR()
+    internal static void SetupDefaultSceneVR(Scene scene)
     {
+        // Quest port, R.E.P.O. 0.5.0 scene handoff: the next Main scene loads while the Reload scene is still loaded,
+        // and the Reload scene has a camera tagged MainCamera of its own. Camera.main and GameObject.Find picked the
+        // Reload scene's camera: the head tracking went onto a camera about to be unloaded, while the new scene's
+        // camera kept RepoXR's counter-rotation without the head pose, and the view turned opposite to the head (the
+        // singleplayer lobby and every level reached through it; the tutorial loads without a handoff). Everything
+        // is now looked up in the scene that was loaded
+        var ui = SceneRoot(scene, "UI");
+        if (!ui)
+        {
+            Logger.LogInfo($"[Scene] {scene.name}: no game UI, no VR scene setup");
+            return;
+        }
+
+        // Quest port: before any of RepoXR's prefabs is instantiated in this scene
+        GameFonts.FixBundlePrefabs();
+
         // We grab all these references manually as most of the instances aren't set yet
         // Since most of them run in the "Start" lifetime function
 
         // Disable blocking UI
-        GameObject.Find("UI/UI/Canvas").GetComponent<Canvas>().enabled = false;
+        ui!.transform.Find("UI/Canvas").GetComponent<Canvas>().enabled = false;
 
-        var canvas = GameObject.Find("UI/HUD/HUD Canvas").transform;
+        var canvas = ui.transform.Find("HUD/HUD Canvas");
         var fade = canvas.Find("Fade");
         var video = canvas.Find("Render Texture Video");
         var loading = canvas.Find("Loading");
@@ -36,10 +54,12 @@ internal static class Entrypoint
 
         // The overlay camera is always in the same position in the hierarchy, in every scene
         var overlayCamera = canvas.parent.Find("Camera Overlay").GetComponent<Camera>();
-        var mainCamera = Camera.main!;
+        var mainCamera = MainCameraIn(scene);
+        Logger.LogInfo($"[Scene] {scene.name}: VR camera {mainCamera.name} ({mainCamera.gameObject.scene.name})");
 
         // Add tracking to camera
         mainCamera.gameObject.AddComponent<VRCameraTracker>();
+        mainCamera.gameObject.AddComponent<VRCameraReport>();
 
         // Parent overlay to main camera
         overlayCamera.transform.SetParent(mainCamera.transform, false);
@@ -84,7 +104,7 @@ internal static class Entrypoint
         loadingCanvas.transform.localPosition = Vector3.zero;
         loadingCanvas.transform.localEulerAngles = Vector3.zero;
         loadingCanvas.transform.localScale = Vector3.one * 0.01f;
-        loadingCanvas.transform.SetParent(Camera.main!.transform.parent, false);
+        loadingCanvas.transform.SetParent(mainCamera.transform.parent, false);
         loadingCanvas.gameObject.AddComponent<UI.LoadingUI>();
         loadingCanvas.GetComponent<RectTransform>().sizeDelta = new Vector2(720, 400); // For masking
 
@@ -126,13 +146,40 @@ internal static class Entrypoint
 
         // Create custom camera (if enabled)
         if (Plugin.Config.CustomCamera.Value)
-            Object.Instantiate(AssetCollection.CustomCamera, Camera.main.transform.parent);
+            Object.Instantiate(AssetCollection.CustomCamera, mainCamera.transform.parent);
 
         // Create haptic feedback manager
         new GameObject("Haptic Manager").AddComponent<HapticManager>();
 
         // Create persistent data manager
         new GameObject("Data Manager").AddComponent<DataManager>();
+    }
+
+    internal static bool SceneRootExists(Scene scene, string name) => SceneRoot(scene, name);
+
+    private static GameObject? SceneRoot(Scene scene, string name)
+    {
+        foreach (var root in scene.GetRootGameObjects())
+            if (root.name == name)
+                return root;
+        return null;
+    }
+
+    /// <summary>The scene's own camera tagged MainCamera (an enabled one first), else Camera.main</summary>
+    private static Camera MainCameraIn(Scene scene)
+    {
+        Camera? any = null;
+        foreach (var root in scene.GetRootGameObjects())
+        foreach (var camera in root.GetComponentsInChildren<Camera>(true))
+        {
+            if (!camera.CompareTag("MainCamera"))
+                continue;
+            if (camera.isActiveAndEnabled)
+                return camera;
+            any ??= camera;
+        }
+
+        return any ? any! : Camera.main!;
     }
 
     /// <summary>
@@ -192,6 +239,7 @@ internal static class Entrypoint
 
     private static void OnStartupInGame()
     {
+        GameFonts.FixBundlePrefabs();
         GameDirector.instance.gameObject.AddComponent<VRSession>();
     }
 }
@@ -201,12 +249,70 @@ internal static class UniversalEntrypoint
 {
     private static bool hasShownErrorMessage;
     
-    public static void OnSceneLoad(string _)
+    public static void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
-        if (Plugin.Flags.HasFlag(Flags.VR))
-            Entrypoint.SetupDefaultSceneVR();
+        // R.E.P.O. 0.5.0 hands scenes over: the next Main scene loads while the Reload scene is still the active one
+        // (ReloadScene.Handoff*), and the Reload scene is unloaded afterwards. The objects created here at the root
+        // (the VR overlay canvas, the network system...) land in the active scene and went away with it: in the
+        // singleplayer lobby GameHud found no overlay canvas and stopped, the game's HUD canvas stayed a giant screen
+        // around the player (the "mirrored" view), with no pause menu and no pointers. They are moved into the scene
+        // that was loaded
+        var active = SceneManager.GetActiveScene();
+        Logger.LogInfo($"[Scene] {scene.name} loaded ({mode}), active scene {active.name}");
 
-        SetupDefaultSceneUniversal();
+        // The Reload scene's own camera is tagged MainCamera too and is still loaded while the next Main scene starts:
+        // much of RepoXR takes Camera.main in Awake/Start (camera position, loading UI, pause menu, crosshair)
+        if (Entrypoint.SceneRootExists(scene, "UI"))
+            UntagOtherMainCameras(scene);
+        var before = active == scene ? null : new HashSet<GameObject>(active.GetRootGameObjects());
+
+        try
+        {
+            if (Plugin.Flags.HasFlag(Flags.VR))
+                Entrypoint.SetupDefaultSceneVR(scene);
+
+            SetupDefaultSceneUniversal();
+        }
+        finally
+        {
+            if (before != null)
+                MoveNewRoots(active, before, scene, mode);
+        }
+    }
+
+    private static void UntagOtherMainCameras(Scene scene)
+    {
+        for (var i = 0; i < SceneManager.sceneCount; i++)
+        {
+            var other = SceneManager.GetSceneAt(i);
+            if (other == scene || !other.isLoaded)
+                continue;
+
+            foreach (var root in other.GetRootGameObjects())
+            foreach (var camera in root.GetComponentsInChildren<Camera>(true))
+            {
+                if (!camera.CompareTag("MainCamera"))
+                    continue;
+
+                camera.tag = "Untagged";
+                Logger.LogInfo($"[Scene] {camera.name} in {other.name} no longer counts as the main camera");
+            }
+        }
+    }
+
+    private static void MoveNewRoots(Scene active, HashSet<GameObject> before, Scene scene, LoadSceneMode mode)
+    {
+        var moved = 0;
+        foreach (var root in active.GetRootGameObjects())
+        {
+            if (before.Contains(root))
+                continue;
+
+            SceneManager.MoveGameObjectToScene(root, scene);
+            moved++;
+        }
+
+        Logger.LogInfo($"[Scene] {scene.name} loaded ({mode}) while {active.name} was active: {moved} RepoXR objects moved into it");
     }
 
     /// <summary>

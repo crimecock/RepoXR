@@ -65,7 +65,7 @@ internal static class MoonUIPatches
         if (_state == MoonUI.State.None)
             FadeOverlay.Instance.Image.color = Color.clear;
         // Reset the position and rotation of the canvas when we're about to show the UI
-        else if (_state == MoonUI.State.Show)
+        else if (_state == MoonUI.State.Show && RepoXR.UI.LoadingUI.instance)
             RepoXR.UI.LoadingUI.instance.ResetPosition();
     }
 

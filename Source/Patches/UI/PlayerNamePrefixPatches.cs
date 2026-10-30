@@ -55,8 +55,7 @@ internal static class PlayerNamePrefixPatches
             yield break;
 
             static bool HostIsInVR(MenuPageLobby lobby) => lobby.lobbyPlayers.Any(player =>
-                player.photonView.Owner.IsMasterClient &&
-                player.photonView.Owner.CustomProperties.ContainsKey("VRPlayer"));
+                player.IsMasterClient && player.CustomProperties.ContainsKey("VRPlayer"));  // 0.5.0: Photon players
         }
     }
 

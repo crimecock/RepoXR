@@ -63,15 +63,150 @@ internal static class InputPatches
         {
             __result = (int)key >= bindings
                 ? AssetCollection.RemappableControls.additionalBindings[(int)key - bindings]
-                : Actions.Instance[key.ToString()];
+                : VRActionFor(key);
 
-            return false;
+            // If no key was found, fall back to vanilla keybind (likely won't work with VR controllers though)
+            return __result == null;
         }
         catch
         {
-            // If no key was found, fall back to vanilla keybind (likely won't work with VR controllers though)
             return true;
         }
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0: the gamepad's grab cursor drift (PhysGrabber.GamepadGrabTargetGet). In VR the grab point
+    /// follows the hand, so there is no drift
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.GrabCursorDriftGet))]
+    [HarmonyPrefix]
+    private static bool NoGrabCursorDrift(ref int __result)
+    {
+        __result = 0;
+        return false;
+    }
+
+    private static InputActionAsset cachedActions;
+    private static readonly Dictionary<InputKey, InputAction> VRActions = new();
+
+    /// <summary>
+    /// The VR action for a game key, or null. R.E.P.O. 0.5.0 added keys the VR actions do not have (vehicles, the
+    /// expression wheel, UI navigation...): these used to throw on every call (the asset's indexer), which is slow
+    /// under IL2CPP and happened every frame while driving; now they are looked up once
+    /// </summary>
+    private static InputAction VRActionFor(InputKey key)
+    {
+        var actions = VRInputSystem.Instance.Actions;
+        if (actions != cachedActions)
+        {
+            cachedActions = actions;
+            VRActions.Clear();
+        }
+
+        if (VRActions.TryGetValue(key, out var action))
+            return action;
+
+        var name = key switch
+        {
+            // Holding on to a vehicle (scooter, snow bike) is the grab beam
+            InputKey.VehicleGrab => "Grab",
+            // 0.5.0 renamed InputKey.Confirm (sending a chat message) to ChatConfirm; the VR action is still "Confirm"
+            InputKey.ChatConfirm => "Confirm",
+            _ => key.ToString(),
+        };
+
+        return VRActions[key] = actions.FindAction(name);
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0 vehicle keys (keyboard W/S/A/D by default) on the movement stick
+    /// </summary>
+    private static class VehicleStick
+    {
+        private static int frame = -1;
+        private static int held, previous;
+
+        private static int Bit(InputKey key) => key switch
+        {
+            InputKey.VehicleAccelerate => 1,
+            InputKey.VehicleBrake => 2,
+            InputKey.VehicleDriftLeft => 4,
+            InputKey.VehicleDriftRight => 8,
+            _ => 0,
+        };
+
+        public static bool Handles(InputKey key) => Bit(key) != 0;
+
+        private static void Update()
+        {
+            if (frame == Time.frameCount)
+                return;
+
+            frame = Time.frameCount;
+            previous = held;
+
+            var stick = Actions.Instance["Movement"].ReadValue<Vector2>();
+            held = (stick.y > 0.5f ? 1 : 0) | (stick.y < -0.5f ? 2 : 0) | (stick.x < -0.5f ? 4 : 0) |
+                   (stick.x > 0.5f ? 8 : 0);
+        }
+
+        public static bool Held(InputKey key)
+        {
+            Update();
+            return (held & Bit(key)) != 0;
+        }
+
+        public static bool Down(InputKey key)
+        {
+            Update();
+            return (held & Bit(key)) != 0 && (previous & Bit(key)) == 0;
+        }
+
+        public static bool Up(InputKey key)
+        {
+            Update();
+            return (held & Bit(key)) == 0 && (previous & Bit(key)) != 0;
+        }
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0: the snow bike's throttle and steering (VehicleThrottleGet/VehicleSteeringGet, W-S and D-A on a
+    /// keyboard) follow the movement stick, analog
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.VehicleThrottleGet))]
+    [HarmonyPrefix]
+    private static bool VehicleThrottleGet(InputManager __instance, ref float __result)
+    {
+        __result = __instance.VehicleInputAllowed() ? Actions.Instance["Movement"].ReadValue<Vector2>().y : 0;
+        return false;
+    }
+
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.VehicleSteeringGet))]
+    [HarmonyPrefix]
+    private static bool VehicleSteeringGet(InputManager __instance, ref float __result)
+    {
+        __result = __instance.VehicleInputAllowed() ? Actions.Instance["Movement"].ReadValue<Vector2>().x : 0;
+        return false;
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0 lets vehicles (snow bike, golf cart) take input only while the game's own Player action map is
+    /// enabled; in VR the controls come from RepoXR's PlayerInput, so that map says nothing about them. The other
+    /// checks stay
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.VehicleInputAllowed))]
+    [HarmonyPrefix]
+    private static bool VehicleInputAllowed(InputManager __instance, ref bool __result)
+    {
+        __result = Application.isFocused && SemiFunc.NoTextInputsActive() &&
+                   __instance.disableMovementTimer <= 0 &&
+                   !(GameDirector.instance && GameDirector.instance.DisableInput) &&
+                   !(PlayerController.instance && PlayerController.instance.InputDisableTimer > 0) &&
+                   !(__instance.disableControlsExceptTimer > 0 && (__instance.disableControlsExceptList == null ||
+                                                                   !__instance.disableControlsExceptList.Contains(InputKey.Movement))) &&
+                   !(__instance.disableControlsIncludeTimer > 0 && __instance.disableControlsIncludeList != null &&
+                     __instance.disableControlsIncludeList.Contains(InputKey.Movement));
+        return false;
     }
 
     [HarmonyPatch(typeof(InputManager), nameof(InputManager.GetMovement))]
@@ -150,6 +285,12 @@ internal static class InputPatches
                 or InputKey.Inventory3 or InputKey.Interact when __instance.disableMovementTimer > 0:
                 return true;
 
+            // R.E.P.O. 0.5.0 clicks its menus through InputKey.UIClick (SemiFunc.InputUIClick) instead of
+            // Input.GetMouseButtonDown, which the mouse input patches below replaced; the VR actions have no UIClick
+            case InputKey.UIClick when XRRayInteractorManager.Instance is { } rays:
+                __result = rays.GetTriggerDown();
+                return false;
+
             // Do not allow pause menu during loading
             case InputKey.Menu when LoadingUI.instance.isActiveAndEnabled:
 
@@ -157,6 +298,10 @@ internal static class InputPatches
             case InputKey.SpectateNext or InputKey.SpectatePrevious
                 when ChatManager.instance.chatActive || MenuManager.instance.currentMenuPage:
                 __result = false;
+                return false;
+
+            case var vehicle when VehicleStick.Handles(vehicle):
+                __result = VehicleStick.Down(vehicle);
                 return false;
 
             default:
@@ -178,6 +323,18 @@ internal static class InputPatches
         if (__instance.disableControlsExceptTimer > 0 && !__instance.disableControlsExceptList.Contains(key))
             return true;
 
+        if (key == InputKey.UIClick && XRRayInteractorManager.Instance is { } rays)
+        {
+            __result = rays.GetTriggerUp();
+            return false;
+        }
+
+        if (VehicleStick.Handles(key))
+        {
+            __result = VehicleStick.Up(key);
+            return false;
+        }
+
         __result = __instance.GetAction(key).WasReleasedThisFrame();
 
         return false;
@@ -192,6 +349,18 @@ internal static class InputPatches
 
         if (__instance.disableControlsExceptTimer > 0 && !__instance.disableControlsExceptList.Contains(key))
             return true;
+
+        if (key == InputKey.UIClick && XRRayInteractorManager.Instance is { } rays)
+        {
+            __result = rays.GetTriggerButton();
+            return false;
+        }
+
+        if (VehicleStick.Handles(key))
+        {
+            __result = VehicleStick.Held(key);
+            return false;
+        }
 
         __result = __instance.GetAction(key).IsPressed();
 
@@ -243,9 +412,10 @@ internal static class InputPatches
     /// </summary>
     [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputDisplayGetString))]
     [HarmonyPrefix]
-    private static bool InputDisplayGetString(InputAction action, int bindingIndex, ref string __result)
+    // by position: R.E.P.O. 0.5.0 renamed the parameters (_action, _index)
+    private static bool InputDisplayGetString(InputAction __0, int __1, ref string __result)
     {
-        var binding = action.bindings[bindingIndex].effectivePath;
+        var binding = __0.bindings[__1].effectivePath;
         __result = Utils.GetControlSpriteString(binding);
 
         return false;
@@ -254,7 +424,7 @@ internal static class InputPatches
     /// <summary>
     /// Use our own <see cref="VRInputSystem.InputToggleGet"/> since we might have other bindings not present in the base game
     /// </summary>
-    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputToggleGet))]
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputToggleGet), typeof(InputKey))]  // 0.5.0 added a scheme overload
     [HarmonyPrefix]
     private static bool InputToggleGet(ref InputKey key, ref bool __result)
     {
@@ -266,13 +436,20 @@ internal static class InputPatches
     /// <summary>
     /// Prevent the addition of underlines in the input text
     /// </summary>
-    [HarmonyPatch(typeof(InputManager), nameof(InputManager.InputDisplayReplaceTags))]
+    // R.E.P.O. 0.5.0: InputManager.InputDisplayReplaceTags is obsolete and forwards (through
+    // SemiFunc.InputDisplayReplaceTags) to the new InputGlyphs.ReplaceTags
+    [HarmonyPatch(typeof(InputGlyphs), nameof(InputGlyphs.ReplaceTags))]
     [HarmonyPrefix]
-    private static bool NoUnderlinePatch(InputManager __instance, ref string __result, ref string _text)
+    private static bool NoUnderlinePatch(ref string __result, string __0)
     {
-        _text = __instance.tagDictionary.Aggregate(_text,
+        var __instance = InputManager.instance;
+        // Glyph texts refresh before InputManager has started (seen on 0.5.0): let the game handle those
+        if (__instance == null || __instance.tagDictionary == null)
+            return true;
+
+        var _text = __instance.tagDictionary.Aggregate(__0,
             (current, keyValuePair) => current.Replace(keyValuePair.Key,
-                __instance.InputDisplayGet(keyValuePair.Value, MenuKeybind.KeyType.InputKey, MovementDirection.Up)));
+                __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up)));
 
         __result = _text;
 

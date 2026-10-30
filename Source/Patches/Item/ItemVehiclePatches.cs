@@ -28,45 +28,13 @@ internal static class ItemVehiclePatches
         static float GetDriftDeadzone(ItemVehicle vehicle) => vehicle.currentDriver.IsVRPlayer() ? 0.5f : 0.1f;
     }
 
-    [HarmonyPatch(typeof(ItemVehicle), nameof(ItemVehicle.ApplyVehicleMovement))]
+    /// <summary>
+    /// R.E.P.O. 0.5.0: movement, steering and drift no longer ask the camera themselves, they all read
+    /// <see cref="ItemVehicle.ControlCameraForward"/>; the VR forward (head or hand) goes in there once
+    /// </summary>
+    [HarmonyPatch(typeof(ItemVehicle), nameof(ItemVehicle.ControlCameraForward), MethodType.Getter)]
     [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> ApplyVehicleMovementPatch(IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt,
-                    Method(typeof(PlayerLocalCamera), nameof(PlayerLocalCamera.GetOverrideTransform))))
-            .Repeat(m => m.Set(OpCodes.Call, ((Func<PlayerLocalCamera, Transform>)GetVehicleTargetForward).Method))
-            .InstructionEnumeration();
-    }
-
-    [HarmonyPatch(typeof(ItemVehicle), nameof(ItemVehicle.ApplyVehicleSteering))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> ApplyVehicleSteeringPatch(IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt,
-                    Method(typeof(PlayerLocalCamera), nameof(PlayerLocalCamera.GetOverrideTransform))))
-            .Set(OpCodes.Call, ((Func<PlayerLocalCamera, Transform>)GetVehicleTargetForward).Method)
-            .InstructionEnumeration();
-    }
-
-    [HarmonyPatch(typeof(ItemVehicle), nameof(ItemVehicle.ApplyVehicleDrift))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> ApplyVehicleDriftPatch(IEnumerable<CodeInstruction> instructions)
-    {
-        return new CodeMatcher(instructions)
-            .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt,
-                    Method(typeof(PlayerLocalCamera), nameof(PlayerLocalCamera.GetOverrideTransform))))
-            .Set(OpCodes.Call, ((Func<PlayerLocalCamera, Transform>)GetVehicleTargetForward).Method)
-            .InstructionEnumeration();
-    }
-
-    [HarmonyPatch(typeof(ItemVehicle), nameof(ItemVehicle.UpdateSteering))]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> UpdateSteeringPatch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> ControlCameraForwardPatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,

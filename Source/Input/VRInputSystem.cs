@@ -26,6 +26,8 @@ public class VRInputSystem : MonoBehaviour
     {
         _instance = this;
 
+        ApplyPortDefaults(AssetCollection.VRInputs);
+
         playerInput = gameObject.AddComponent<PlayerInput>();
         playerInput.actions = AssetCollection.VRInputs;
         playerInput.defaultActionMap = "VR Actions";
@@ -36,6 +38,7 @@ public class VRInputSystem : MonoBehaviour
         if (VRSession.IsLeftHanded)
         {
             playerInput.actions.LoadBindingOverridesFromJson(AssetCollection.RemappableControls.defaultLeftHandedBindings);
+            ApplyPortLeftHandedDefaults(playerInput.actions);
             playerInput.actions.LoadBindingOverridesFromJson(Plugin.Config.ControllerBindingsOverrideLeft.Value, false);
         }
         else
@@ -45,6 +48,58 @@ public class VRInputSystem : MonoBehaviour
 
         inputToggle =
             JsonConvert.DeserializeObject<Dictionary<string, bool>>(Plugin.Config.InputToggleBindings.Value) ?? [];
+    }
+
+    private const string MenuButton = "<XRController>{LeftHand}/{MenuButton}";
+
+    /// <summary>
+    /// Quest port defaults: the pause menu moves to the menu button of the left controller (≡), which nothing used,
+    /// and the X button it frees mutes the microphone (ToggleMute, unbound in RepoXR). These change the default
+    /// bindings, so bindings changed in Settings → Controls still win, and resetting a control comes back to these
+    /// </summary>
+    private static void ApplyPortDefaults(InputActionAsset actions)
+    {
+        // On PC RepoXR's own bindings stay: not every controller has a left menu button
+        if (!Plugin.IsQuest)
+            return;
+
+        try
+        {
+            ChangeFirstBinding(actions.FindAction("Menu"), MenuButton);
+            ChangeFirstBinding(actions.FindAction("ToggleMute"), "<XRController>{LeftHand}/primaryButton");
+        }
+        catch (Exception e)
+        {
+            Logger.LogWarning($"Could not apply the Quest port's default bindings: {e}");
+        }
+    }
+
+    /// <summary>
+    /// RepoXR's left-handed defaults mirror the controllers and put the menu on the right A button: the menu button
+    /// only exists on the left controller, so it stays there, and A mutes
+    /// </summary>
+    private static void ApplyPortLeftHandedDefaults(InputActionAsset actions)
+    {
+        if (!Plugin.IsQuest)
+            return;
+
+        try
+        {
+            actions.FindAction("Menu")?.ApplyBindingOverride(0, MenuButton);
+            actions.FindAction("ToggleMute")?.ApplyBindingOverride(0, "<XRController>{RightHand}/primaryButton");
+        }
+        catch (Exception e)
+        {
+            Logger.LogWarning($"Could not apply the Quest port's left-handed bindings: {e}");
+        }
+    }
+
+    private static void ChangeFirstBinding(InputAction? action, string path)
+    {
+        if (action == null || action.bindings.Count == 0 || action.bindings[0].path == path)
+            return;
+
+        action.ChangeBinding(0).WithPath(path);
     }
 
     private void OnEnable()
@@ -182,6 +237,11 @@ public class VRInputSystem : MonoBehaviour
                 return control.defaultToggle;
             }
 
+        // R.E.P.O. 0.5.0: holding on to a vehicle has its own toggle, on in the game by default (one press gets on, the
+        // next one gets off); the VR actions have no key for it, it rides on Grab
+        if (action == "VehicleGrab")
+            return true;
+
         // If all else fails: default to hold
         return false;
     }
@@ -199,6 +259,7 @@ public class VRInputSystem : MonoBehaviour
         if (VRSession.IsLeftHanded)
         {
             playerInput.actions.LoadBindingOverridesFromJson(AssetCollection.RemappableControls.defaultLeftHandedBindings);
+            ApplyPortLeftHandedDefaults(playerInput.actions);
             playerInput.actions.LoadBindingOverridesFromJson(Plugin.Config.ControllerBindingsOverrideLeft.Value, false);
         }
         else

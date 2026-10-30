@@ -7,6 +7,7 @@ using RepoXR.Player.Camera;
 using RepoXR.UI;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 using static HarmonyLib.AccessTools;
 
@@ -39,6 +40,17 @@ internal static class UIPatches
         __instance.transform.localPosition = Vector3.zero;
         __instance.waitTimer = 3;
         __instance.introDone = true;
+
+        // R.E.P.O. 0.5.0: the first main menu blocks interaction and puts its left and right panels in CanvasGroups
+        // that neither take input nor block raycasts, until the intro slides each panel within 300 units of its
+        // place (MenuPageMain.IntroGroupUpdate). Without the intro that never happens: no button could be hovered,
+        // and XRI's UI raycast found nothing (Quest port)
+        if (__instance.introGroupLeft)
+            Object.Destroy(__instance.introGroupLeft);
+        if (__instance.introGroupRight)
+            Object.Destroy(__instance.introGroupRight);
+        if (__instance.menuPage)
+            __instance.menuPage.interactionBlocked = false;
     }
 
     /// <summary>
@@ -61,14 +73,13 @@ internal static class UIPatches
         if (XRRayInteractorManager.Instance is not { } manager)
             return true;
 
-        var (interactor, _) = manager.GetActiveInteractor();
-        if (!interactor.TryGetCurrentUIRaycastResult(out var result))
+        if (!manager.TryGetUIHit(out var hitObject, out _))
         {
             __result = false;
             return false;
         }
 
-        if (result.gameObject.GetComponentInParent<Canvas>() != rectTransform.GetComponentInParent<Canvas>())
+        if (hitObject.GetComponentInParent<Canvas>() != rectTransform.GetComponentInParent<Canvas>())
         {
             __result = false;
             return false;
@@ -123,6 +134,64 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// R.E.P.O. 0.5.0 (gamepad support) switches its menus to keyboard navigation as soon as a navigate input or a
+    /// keyboard click comes in, and back to the pointer only when the mouse moves. There is no mouse in VR, so the
+    /// menus would stay in navigation mode, where pointing at a button does not select it: keep the pointer mode
+    /// </summary>
+    [HarmonyPatch(typeof(MenuManager), nameof(MenuManager.StateOpen))]
+    [HarmonyPrefix]
+    private static void KeepPointerNavigation(MenuManager __instance)
+    {
+        if (XRRayInteractorManager.Instance is not null)
+            __instance.isKeyboardNavigating = false;
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0 sizes the hover area as rect size × lossyScale (screen pixels on its screen-space canvas). The
+    /// VR pointer and the element positions are in the menu page's local units, and the world-space menu canvas is
+    /// scaled to 0.03: the hover area shrank to a speck in each button's corner and nothing could be pointed at.
+    /// Scale relative to the menu page instead, which is 1 for the page's own elements
+    /// </summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseHover))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> UIPointerHoverScalePatch(IEnumerable<CodeInstruction> instructions)
+    {
+        var lossyScale = PropertyGetter(typeof(Transform), nameof(Transform.lossyScale));
+        var replaced = 0;
+        foreach (var instruction in instructions)
+        {
+            if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) &&
+                Equals(instruction.operand, lossyScale))
+            {
+                instruction.opcode = OpCodes.Call;
+                instruction.operand = ((Func<Transform, Vector3>)ScaleInMenuPage).Method;
+                replaced++;
+            }
+
+            yield return instruction;
+        }
+
+        if (replaced == 0)
+            throw new InvalidOperationException("SemiFunc.UIMouseHover: no Transform.lossyScale to replace");
+    }
+
+    private static Vector3 ScaleInMenuPage(Transform transform)
+    {
+        var scale = transform.lossyScale;
+        if (XRRayInteractorManager.Instance is null)
+            return scale;
+
+        var page = transform.GetComponentInParent<MenuPage>();
+        if (!page)
+            return scale;
+
+        var reference = page.transform.lossyScale;
+        return new Vector3(reference.x != 0 ? scale.x / reference.x : scale.x,
+            reference.y != 0 ? scale.y / reference.y : scale.y,
+            reference.z != 0 ? scale.z / reference.z : scale.z);
+    }
+
+    /// <summary>
     /// Properly set the mouse hold position
     /// </summary>
     [HarmonyPatch(typeof(MenuManager), nameof(MenuManager.Update))]
@@ -147,7 +216,8 @@ internal static class UIPatches
     /// <summary>
     /// Detect UI hits using VR pointers instead of mouse cursor
     /// </summary>
-    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseGetLocalPositionWithinRectTransform))]
+    // R.E.P.O. 0.5.0 added an overload with an explicit mouse position, this one passes the cursor's
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseGetLocalPositionWithinRectTransform), typeof(RectTransform))]
     [HarmonyPrefix]
     private static bool UIMouseGetLocalPositionWithinRectTransformPatch(RectTransform rectTransform,
         ref Vector2 __result)
@@ -287,7 +357,7 @@ internal static class UIPatches
     {
         var manager = XRRayInteractorManager.Instance;
 
-        if (!__instance.menuElementHover.isHovering || manager == null || SemiFunc.InputDown(InputKey.Confirm) ||
+        if (!__instance.menuElementHover.isHovering || manager == null || SemiFunc.InputDown(InputKey.UIClick) ||
             SemiFunc.InputDown(InputKey.Grab))
             return;
 

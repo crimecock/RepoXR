@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using RepoXR.Assets;
 using RepoXR.Managers;
+using RepoXR.UI;
 using RepoXR.UI.Menu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,12 +35,17 @@ internal static class MenuPatches
         if (!SemiFunc.MenuLevel() && !VRSession.InVR)
             return;
         
+        GameFonts.FixBundlePrefabs();
+
+        // Quest port: R.E.P.O. 0.5.0's settings page has six tabs (Gameplay 260 ... Gamepad 120, Language 85, 35 apart),
+        // and the VR Settings button at (126, 83) sat right on top of Language. It goes below Language, Back below it
         var vrButton = Object.Instantiate(AssetCollection.VRSettingsButton, __instance.transform)
             .GetComponent<Button>();
         var vrRect = vrButton.GetComponent<RectTransform>();
+        var language = __instance.transform.Find("Menu Button - Language") as RectTransform;
 
         // Brute forcing element positions
-        vrRect.anchoredPosition = new Vector2(126, 83);
+        vrRect.anchoredPosition = language ? language.anchoredPosition - new Vector2(0, 35) : new Vector2(126, 83);
         vrButton.onClick.AddListener(() =>
         {
             __instance.ButtonEventBack();
@@ -48,6 +54,6 @@ internal static class MenuPatches
 
         // Move back button a bit down
         __instance.transform.Find("Menu Button - Back").GetComponent<RectTransform>().anchoredPosition =
-            new Vector2(126, 35);
+            language ? vrRect.anchoredPosition - new Vector2(0, 45) : new Vector2(126, 35);
     }
 }

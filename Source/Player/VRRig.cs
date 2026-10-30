@@ -105,6 +105,17 @@ public class VRRig : MonoBehaviour
         playerAvatarVisuals = playerAvatar.playerAvatarVisuals;
         playerAvatarRightArm = playerAvatarVisuals.GetComponentInChildren<PlayerAvatarRightArm>(true);
 
+        // The rig's meshes (arms, inventory) use the asset bundle's own copy of Hurtable/Hurtable, which knows nothing
+        // of the Quest build's per-pixel lamps (Rendering.LampLighting): Unity no longer lights with them, so the arms
+        // were black away from a flashlight. They get the game's shader, the one the player's body uses
+        var gameShader = playerAvatarVisuals.GetComponentsInChildren<Renderer>(true)
+            .SelectMany(renderer => renderer.sharedMaterials)
+            .FirstOrDefault(material => material && material.shader.name == "Hurtable/Hurtable")?.shader;
+        if (gameShader)
+            foreach (var material in GetComponentsInChildren<Renderer>(true).SelectMany(renderer => renderer.sharedMaterials))
+                if (material && material.shader != gameShader && material.shader.name == gameShader.name)
+                    material.shader = gameShader;
+
         // Set up grabber claw
         playerAvatarRightArm.grabberClawParent.gameObject.SetLayerRecursively(6);
         playerAvatarRightArm.grabberClawParent.GetComponentsInChildren<MeshRenderer>()

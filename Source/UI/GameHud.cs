@@ -41,7 +41,7 @@ public class GameHud : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!camera) // Start has not yet finished
+        if (!camera || !SmoothedCanvas) // Start has not yet finished (or failed: logged once by Unity, not every frame)
             return;
 
         // Keep the UI upright even during the short post-death "view from above" state

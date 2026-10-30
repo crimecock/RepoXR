@@ -82,9 +82,14 @@ internal static class AssetCollection
             return false;
         }
 
-        // Load translations
-        Addressables.LoadContentCatalogAsync(Path.Combine(AddressablesPath, "catalog_0.1.json"), true)
-            .WaitForCompletion();
+        // Load translations. R.E.P.O. 0.5.0's Addressables 2 reads JSON catalogs only when built with
+        // ENABLE_JSON_CATALOG: the Quest build is, the PC game is not ("Expecting to load catalogs in binary format").
+        // Without the catalog RepoXR's own translations (the VR tutorial texts) are missing and the game's stay
+        var catalog = Addressables.LoadContentCatalogAsync(Path.Combine(AddressablesPath, "catalog_0.1.json"), true);
+        catalog.WaitForCompletion();
+        TranslationsLoaded = catalog.Status == AsyncOperationStatus.Succeeded;
+        if (!TranslationsLoaded)
+            Logger.LogWarning("RepoXR's translations could not be loaded (catalog_0.1.json); the game's own tutorial texts stay");
 
         OpenXRFeatures = assetBundle.LoadAsset<OpenXRFeaturePack>("OpenXRFeatures");
 
@@ -137,6 +142,8 @@ internal static class AssetCollection
 
         return true;
     }
+
+    public static bool TranslationsLoaded { get; private set; }
 
     public static AsyncOperationHandle<LocalizedAsset> GetLocalizedAsset(string name)
     {

@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using BepInEx.Configuration;
 using HarmonyLib;
+using UnityEngine;
 using RepoXR.Player.Camera;
 
 using static HarmonyLib.AccessTools;
@@ -22,7 +23,8 @@ internal static class EnemyHeartHuggerPatches
             .MatchForward(false, new CodeMatch(OpCodes.Ldsfld, Field(typeof(CameraAim), nameof(CameraAim.Instance))))
             .SetOperandAndAdvance(Field(typeof(VRCameraAim), nameof(VRCameraAim.instance)))
             .MatchForward(false,
-                new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraAim), nameof(CameraAim.AimTargetSoftSet))))
+                new CodeMatch(OpCodes.Callvirt, Method(typeof(CameraAim), nameof(CameraAim.AimTargetSoftSet),
+                    [typeof(Vector3), typeof(float), typeof(float), typeof(float), typeof(GameObject), typeof(int)])))
             .SetAndAdvance(OpCodes.Call, Plugin.GetConfigGetter())
             .InsertAndAdvance(
                 new CodeInstruction(OpCodes.Callvirt, PropertyGetter(typeof(Config), nameof(Config.ReducedAimImpact))),

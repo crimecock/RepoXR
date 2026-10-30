@@ -22,7 +22,10 @@ public class LoadingUI : MonoBehaviour
 
     private void OnDestroy()
     {
-        instance = null!;
+        // R.E.P.O. 0.5.0's scene handoff: the next scene's loading UI wakes up before the old one is destroyed, and
+        // the old one used to clear the new one's instance (the result screen then threw on every frame and hung)
+        if (instance == this)
+            instance = null!;
     }
 
     private IEnumerator Start()
