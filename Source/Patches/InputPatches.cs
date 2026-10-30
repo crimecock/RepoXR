@@ -74,6 +74,18 @@ internal static class InputPatches
         }
     }
 
+    /// <summary>
+    /// R.E.P.O. 0.5.0: the gamepad's grab cursor drift (PhysGrabber.GamepadGrabTargetGet). In VR the grab point
+    /// follows the hand, so there is no drift
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.GrabCursorDriftGet))]
+    [HarmonyPrefix]
+    private static bool NoGrabCursorDrift(ref int __result)
+    {
+        __result = 0;
+        return false;
+    }
+
     private static InputActionAsset cachedActions;
     private static readonly Dictionary<InputKey, InputAction> VRActions = new();
 
@@ -98,6 +110,8 @@ internal static class InputPatches
         {
             // Holding on to a vehicle (scooter, snow bike) is the grab beam
             InputKey.VehicleGrab => "Grab",
+            // 0.5.0 renamed InputKey.Confirm (sending a chat message) to ChatConfirm; the VR action is still "Confirm"
+            InputKey.ChatConfirm => "Confirm",
             _ => key.ToString(),
         };
 

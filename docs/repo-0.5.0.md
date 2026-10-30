@@ -57,7 +57,8 @@ Launch options go in Steam → R.E.P.O. → Properties → *Launch options*, e.g
 | OpenXR runtime libraries | Since alpha 2 they are Unity 6 ones: OpenXR plugin 1.14.3 (native `UnityOpenXR.dll` and `openxr_loader.dll` for Windows x64 from the package), XR Management 4.5.0, XR Interaction Toolkit 2.6.4, XR Core Utils 2.6.0, Legacy Input Helpers 2.1.13 — the versions the Quest build runs. The managed ones are compiled for Windows outside the Unity editor (below); RepoXR resolves every member it uses in them, but they have not run on Windows yet | The log shows `[RepoXR] Loading VR...` failing, or a `MissingMethodException` / `TypeLoadException` naming a `Unity.XR` assembly |
 | Graphics API | Unity 6 can run the game on Direct3D 12 (the game ships `D3D12Core.dll`); RepoXR was only ever used on Direct3D 11 | Try the launch option `-force-d3d11` |
 | FixPluginTypesSerialization | It hooks Unity's native player to load RepoXR's asset bundle components; it was made for Unity 2022 | Missing VR UI, errors about scripts in `repoxrassets` |
-| RepoXR's asset bundle and Addressables | Built with Unity 2022. Fonts are handled in code (below); its shaders and the Addressables 1.x catalog under 0.5.0's Addressables 2 are untested on PC | Pink or missing VR UI, errors loading `catalog_0.1.json` |
+| RepoXR's asset bundle | Built with Unity 2022. Fonts are handled in code (below); its shaders are untested under Unity 6 on PC | Pink or missing VR UI |
+| RepoXR's translations (Addressables) | 0.5.0's Addressables 2 only read binary catalogs unless built with `ENABLE_JSON_CATALOG`; the Quest build is, the PC game is not, so `catalog_0.1.json` is refused on PC | Known: the log warns once, and the tutorial keeps the game's own texts for the inventory, map and expression pages instead of RepoXR's VR ones. A binary catalog built with Unity 6 would bring them back |
 
 ## What changed in 0.5.0 and what the port does
 

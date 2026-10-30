@@ -5,6 +5,10 @@
   loader for Windows x64), XR Management 4.5.0, XR Interaction Toolkit 2.6.4, XR Core Utils 2.6.0, Legacy Input
   Helpers 2.1.13, compiled for Windows by `tools/xr-deps/build.py`; the game's own Unity.Mathematics is used
 - The ways to start in VR are documented (SteamVR, Meta Quest Link, Virtual Desktop, other OpenXR runtimes)
+- `InputKey.ChatConfirm` (0.5.0's name for `Confirm`) uses RepoXR's "Confirm" action again
+- The gamepad's new grab cursor drift (`InputManager.GrabCursorDriftGet`) is 0 in VR
+- PC: R.E.P.O. 0.5.0's Addressables only read binary catalogs, so RepoXR's `catalog_0.1.json` does not load there;
+  the VR tutorial texts then keep the game's own instead of failing
 - Still not tested in VR on PC
 
 # 1.2.3-repo0.5.0-alpha.1 (unofficial fork)
