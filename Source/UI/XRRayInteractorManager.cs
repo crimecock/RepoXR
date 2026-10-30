@@ -33,6 +33,22 @@ public class XRRayInteractorManager : MonoBehaviour
         UpdateActiveController(ActiveController.Right);
     }
 
+    // Quest port: one log line per trigger press while a menu is up, to see why a click does or does not land
+    private void Update()
+    {
+        var (interactor, actions) = GetActiveInteractor();
+        if (!actions.uiPressAction.action.WasPressedThisFrame())
+            return;
+
+        var hit = interactor.TryGetCurrentUIRaycastResult(out var result) && result.gameObject
+            ? result.gameObject.name
+            : "nothing";
+        var menu = MenuManager.instance;
+        Logger.LogInfo($"[UI] trigger ({activeController}): ray on {hit}; menu target {(menu ? menu.currentMenuID : "-")}, " +
+                       $"keyboard navigating {(menu && menu.isKeyboardNavigating)}, page {(menu && menu.currentMenuPage ? menu.currentMenuPage.name : "-")}, " +
+                       $"input mode {SemiFunc.InputMode()}, UI click {SemiFunc.InputUIClick()}");
+    }
+
     private void OnDestroy()
     {
         Instance = null;

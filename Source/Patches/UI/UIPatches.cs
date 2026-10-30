@@ -123,6 +123,19 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// R.E.P.O. 0.5.0 (gamepad support) switches its menus to keyboard navigation as soon as a navigate input or a
+    /// keyboard click comes in, and back to the pointer only when the mouse moves. There is no mouse in VR, so the
+    /// menus would stay in navigation mode, where pointing at a button does not select it: keep the pointer mode
+    /// </summary>
+    [HarmonyPatch(typeof(MenuManager), nameof(MenuManager.StateOpen))]
+    [HarmonyPrefix]
+    private static void KeepPointerNavigation(MenuManager __instance)
+    {
+        if (XRRayInteractorManager.Instance is not null)
+            __instance.isKeyboardNavigating = false;
+    }
+
+    /// <summary>
     /// Properly set the mouse hold position
     /// </summary>
     [HarmonyPatch(typeof(MenuManager), nameof(MenuManager.Update))]

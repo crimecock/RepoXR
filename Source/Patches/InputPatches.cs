@@ -292,6 +292,10 @@ internal static class InputPatches
     private static bool NoUnderlinePatch(ref string __result, string __0)
     {
         var __instance = InputManager.instance;
+        // Glyph texts refresh before InputManager has started (seen on 0.5.0): let the game handle those
+        if (__instance == null || __instance.tagDictionary == null)
+            return true;
+
         var _text = __instance.tagDictionary.Aggregate(__0,
             (current, keyValuePair) => current.Replace(keyValuePair.Key,
                 __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up)));
