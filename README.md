@@ -85,15 +85,14 @@ the version you are running.
 
 ## Known issues · Известные проблемы
 
-Being worked on; none of them stops the game. · Чиним; играть ни одна из них не мешает.
+None right now: everything works on PC, and the Quest builds the same code. · Сейчас нет: на ПК всё работает, а
+Quest собирает тот же код.
 
-| Issue · Проблема | Where · Где | Notes · Подробности |
-|---|---|---|
-| The tutorial shows the game's texts (with the VR controller icons), not RepoXR's VR-specific ones · в обучении тексты игры (со значками контроллера), а не VR-тексты RepoXR | PC | 0.5.0's Addressables do not read RepoXR's JSON catalog on PC · Addressables 0.5.0 на ПК не читают JSON-каталог RepoXR |
-| Whip: fling only once it has caught something; sensitivity may need tuning · хлыст: бросок — только когда он что-то поймал; чувствительность может понадобиться подстроить | PC, Quest | VR Settings → Input → *Whip Sideways / Crack Sensitivity* |
+Tip · совет: the whip flings only once it has caught something; its sensitivity is in *VR Settings → Input → Whip
+Sideways / Crack Sensitivity* · хлыст бросает, только когда что-то поймал; чувствительность — в *VR Settings → Input*.
 
-Found something else? Attach `BepInEx/LogOutput.log` to an [issue](https://github.com/crimecock/RepoXR/issues). ·
-Нашли что-то ещё? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
+Found something? Attach `BepInEx/LogOutput.log` to an [issue](https://github.com/crimecock/RepoXR/issues). ·
+Нашли что-то? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
 
 **The fixes that mattered · Главные исправления**
 

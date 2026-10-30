@@ -70,14 +70,12 @@
 
 ## Известные проблемы
 
-Чиним; играть ни одна из них не мешает.
+Сейчас нет: на ПК всё работает, а Quest собирает тот же код.
 
-| Проблема | Где | Подробности |
-|---|---|---|
-| В обучении тексты игры (со значками контроллера), а не VR-тексты RepoXR | ПК | Addressables 0.5.0 на ПК не читают JSON-каталог RepoXR |
-| Хлыст: бросок — только когда он что-то поймал; чувствительность может понадобиться подстроить | ПК, Quest | VR Settings → Input → *Whip Sideways / Crack Sensitivity* |
+Совет: хлыст бросает, только когда что-то поймал; чувствительность — в *VR Settings → Input → Whip Sideways / Crack
+Sensitivity*.
 
-Нашли что-то ещё? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
+Нашли что-то? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
 
 **Главные исправления**
 
