@@ -1,3 +1,15 @@
+# 1.2.3-repo0.5.0-alpha.6 (unofficial fork)
+
+**Changes**:
+- Tutorial: RepoXR's VR texts (inventory, map, expressions) show on PC too: 0.5.0's Addressables cannot read
+  RepoXR's JSON catalog there, so the same English texts are built in. They exist in English only, so in any other
+  language the game's own translated texts stay (with the VR controller icons)
+- RepoXR's own text tags (`[MapGrabLeft]`, `[MapGrabRight]`, ...) are replaced with controller icons again: they live
+  in `InputManager.tagDictionary`, which alpha 4's tag fix skipped
+- Quest: Quest 3 (Touch Plus) controllers, which none of RepoXR's control schemes names, use the Meta Quest scheme, so
+  the controls page no longer says DISCONNECTED; *Render Mode* (single pass / multipass) in VR Settings → Rendering
+- The shop mirror reads the render mode the game started with (changing it takes a restart)
+
 # 1.2.3-repo0.5.0-alpha.5 (unofficial fork)
 
 **Changes**:
