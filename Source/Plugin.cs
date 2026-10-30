@@ -87,7 +87,7 @@ public class Plugin : BaseUnityPlugin
         Native.BringGameWindowToFront();
         Config.SetupGlobalCallbacks();
 
-        SceneManager.sceneLoaded += (scene, _) => UniversalEntrypoint.OnSceneLoad(scene.name);
+        SceneManager.sceneLoaded += (scene, mode) => UniversalEntrypoint.OnSceneLoad(scene, mode);
     }
 
     public static string GetCommitHash()
