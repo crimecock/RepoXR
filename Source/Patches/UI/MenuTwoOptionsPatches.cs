@@ -70,6 +70,57 @@ internal static class MenuTwoOptionsPatches
                 ? __instance.option2Button.buttonText
                 : __instance.option2Button.GetComponentInChildren<TMPro.TextMeshProUGUI>(true);
     }
+
+    /// <summary>
+    /// 0.5.0 only calls a toggle's own fetch event when the new customFetch is set; RepoXR's toggles (0.4.4 prefabs)
+    /// have the event (their setting's current value) but not the flag, so the game read one of its own settings
+    /// instead and the box showed the wrong option. The flag is set for toggles with custom events and a fetch event
+    /// </summary>
+    [HarmonyPatch(typeof(MenuTwoOptions), nameof(MenuTwoOptions.StartFetch))]
+    [HarmonyPrefix]
+    private static void FetchThroughEvent(MenuTwoOptions __instance)
+    {
+        if (__instance.customEvents && !__instance.customFetch && __instance.fetchSetting != null &&
+            __instance.fetchSetting.GetPersistentEventCount() > 0)
+            __instance.customFetch = true;
+    }
+
+    /// <summary>
+    /// 0.5.0 puts the selection box at x 143.5 or 218.5, the places of the options on the game's own toggles. RepoXR's
+    /// toggles are laid out differently (two 74 px buttons from x 0): the box sat half outside on the right, or
+    /// entirely outside. Without the game's option buttons (option1Button/option2Button), the box goes to the centre
+    /// of the toggle's own first or second button
+    /// </summary>
+    [HarmonyPatch(typeof(MenuTwoOptions), nameof(MenuTwoOptions.OptionBoxX))]
+    [HarmonyPrefix]
+    private static bool BoxOnOwnButtons(MenuTwoOptions __instance, bool __0, ref float __result)
+    {
+        if ((__instance.option1Button && __instance.option2Button) || !__instance.optionsBox)
+            return true;
+
+        UnityEngine.UI.Button? first = null, second = null;
+        foreach (Transform child in __instance.transform)
+        {
+            if (!child.gameObject.activeSelf || child.GetComponent<UnityEngine.UI.Button>() is not { } button)
+                continue;
+
+            if (!first)
+                first = button;
+            else
+            {
+                second = button;
+                break;
+            }
+        }
+
+        if (!first || !second)
+            return true;
+
+        var rect = (RectTransform)(__0 ? first! : second!).transform;
+        var space = __instance.optionsBox.parent;
+        __result = space.InverseTransformPoint(rect.TransformPoint(rect.rect.center)).x;
+        return false;
+    }
 }
 
 /// <summary>

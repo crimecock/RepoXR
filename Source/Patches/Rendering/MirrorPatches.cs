@@ -26,6 +26,11 @@ internal static class MirrorPatches
     private static readonly HashSet<Camera.MonoOrStereoscopicEye> loggedEyes = [];
     private static bool loggedError;
 
+    // Switches for testing the per-eye reflection (the internal test build has keys for them)
+    internal static bool PerEye = true;
+    internal static bool FlipSkew = true;
+    internal static bool SwapEyes;
+
     private static bool SinglePass => Plugin.Config.SinglePassRendering.Value;
     private static bool Shown => Plugin.Config.ShopMirror.Value && !SinglePass;
 
@@ -72,7 +77,7 @@ internal static class MirrorPatches
     /// </summary>
     [HarmonyPatch(typeof(MirrorReflection), nameof(MirrorReflection.CameraPreCull))]
     [HarmonyPrefix]
-    private static bool SkipStereoPreCull(Camera __0) => !(__0 && __0.stereoEnabled);
+    private static bool SkipStereoPreCull(Camera __0) => !(PerEye && __0 && __0.stereoEnabled);
 
     /// <summary>
     /// Each eye renders its own reflection: no "rendered this frame already" throttle for them
@@ -90,7 +95,7 @@ internal static class MirrorPatches
 
     private static void OnCameraPreRender(Camera camera)
     {
-        if (!camera || !camera.stereoEnabled || mirrors.Count == 0 || !Shown)
+        if (!PerEye || !camera || !camera.stereoEnabled || mirrors.Count == 0 || !Shown)
             return;
 
         var active = camera.stereoActiveEye;
@@ -100,7 +105,7 @@ internal static class MirrorPatches
         if (loggedEyes.Add(active))
             Logger.LogInfo($"[Mirror] rendering the reflection for the {active} eye ({camera.name}, frame {Time.frameCount})");
 
-        currentEye = active == Camera.MonoOrStereoscopicEye.Left ? Camera.StereoscopicEye.Left : Camera.StereoscopicEye.Right;
+        currentEye = (active == Camera.MonoOrStereoscopicEye.Left) != SwapEyes ? Camera.StereoscopicEye.Left : Camera.StereoscopicEye.Right;
         try
         {
             foreach (var mirror in mirrors)
@@ -172,7 +177,8 @@ internal static class MirrorPatches
             var worldToCamera = reflection.worldToCameraMatrix;
 
             // The flipped image also flips the eye's off-centre frustum
-            projection.m02 = -projection.m02;
+            if (FlipSkew)
+                projection.m02 = -projection.m02;
             reflection.projectionMatrix = projection;
             if (mirror.clipBehindSurface)
             {
