@@ -134,6 +134,29 @@ internal static class Utils
             Logger.LogInfo($"[UI] Sprite asset {asset.name}: rebuilt {table.Count} glyphs from the {columns}x{rows} sheet");
         }
 
+        // The material (and the asset's hash code) were serialized as "material"/"hashCode" too, Unity 6's TextMeshPro
+        // reads m_Material/m_HashCode: without a material no sprite is drawn. The game's own sprite material (EmojiOne,
+        // TextMeshPro/Sprite) is copied onto RepoXR's sheet
+        if (!asset.material && sheet)
+        {
+            var template = TMPro.TMP_Settings.defaultSpriteAsset ? TMPro.TMP_Settings.defaultSpriteAsset.material : null;
+            var shader = template ? template!.shader : Shader.Find("TextMeshPro/Sprite");
+            if (shader)
+            {
+                var material = template ? new Material(template) : new Material(shader);
+                material.name = asset.name + " Material";
+                material.mainTexture = sheet;
+                asset.material = material;
+                asset.materialHashCode = TMPro.TMP_TextUtilities.GetSimpleHashCode(material.name);
+            }
+        }
+
+        if (asset.hashCode == 0)
+            asset.hashCode = TMPro.TMP_TextUtilities.GetSimpleHashCode(asset.name);
+
+        Logger.LogInfo($"[UI] Sprite asset {asset.name}: material {(asset.material ? $"{asset.material.name} ({asset.material.shader.name})" : "none")}, " +
+                       $"hash {asset.hashCode}");
+
         asset.UpdateLookupTables();
         Logger.LogInfo($"[UI] Sprite asset {asset.name}: 'leftStick' → {asset.GetSpriteIndexFromName("leftStick")}, " +
                        $"'rightTrigger' → {asset.GetSpriteIndexFromName("rightTrigger")}");
