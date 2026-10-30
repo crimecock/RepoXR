@@ -96,6 +96,11 @@ internal class LampLighting : MonoBehaviour
         if (!active)
             return;
 
+        // The game's player previews (main, Esc and Customize menus) ask for deferred shading; only the forward base
+        // pass adds the lamps, so they were lit by ambient light alone. They render forward like the rest of the game
+        if (camera.renderingPath == RenderingPath.DeferredShading)
+            camera.renderingPath = RenderingPath.Forward;
+
         var eye = camera.transform.position;
         var count = 0;
         for (var i = 0; i < lit.Count; i++)
