@@ -121,6 +121,7 @@ internal static class AssetCollection
         VideoOverlay = assetBundle.LoadAsset<Material>("Video Overlay");
         
         TMPInputsSpriteAsset = assetBundle.LoadAsset<TMP_SpriteAsset>("TMPInputsSpriteAsset");
+        Utils.RepairSpriteAsset(TMPInputsSpriteAsset);
 
         Logo = assetBundle.LoadAsset<Sprite>("REPOXR_Splash_Logo");
         

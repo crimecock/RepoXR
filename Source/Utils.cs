@@ -92,6 +92,53 @@ internal static class Utils
     /// resolve and the controls page showed question marks. RepoXR's input sprite asset becomes the text's sprite asset
     /// when it has none, or a fallback of the one it has
     /// </summary>
+    /// <summary>
+    /// RepoXR's controller icons (TMPInputsSpriteAsset) were made with the TextMeshPro of Unity 2022, which kept the
+    /// sprites' places on the sheet in m_SpriteGlyphTable. Unity 6's TextMeshPro reads m_GlyphTable, the asset came up
+    /// with no glyphs, its name lookup stayed empty (a sprite is only listed when its glyph is found) and every
+    /// &lt;sprite name=...&gt; was drawn as a "?". The sheet is a plain grid of 100 px cells, glyph 0 at the top left, so
+    /// the glyphs are put back from that when they are missing
+    /// </summary>
+    public static void RepairSpriteAsset(TMPro.TMP_SpriteAsset? asset)
+    {
+        if (!asset)
+            return;
+
+        var characters = asset!.spriteCharacterTable;
+        var glyphs = asset.spriteGlyphTable;
+        var sheet = asset.spriteSheet;
+        Logger.LogInfo($"[UI] Sprite asset {asset.name}: {characters?.Count ?? -1} characters, {glyphs?.Count ?? -1} glyphs, " +
+                       $"sheet {(sheet ? $"{sheet.width}x{sheet.height}" : "none")}, material {(asset.material ? asset.material.name : "none")}");
+
+        if (characters is { Count: > 0 } && sheet && (glyphs == null || glyphs.Count < characters.Count))
+        {
+            const int cell = 100;
+            var columns = Mathf.Max(1, sheet.width / cell);
+            var rows = Mathf.Max(1, sheet.height / cell);
+            var have = new HashSet<uint>((glyphs ?? []).Select(glyph => glyph.index));
+            var table = glyphs ?? [];
+            foreach (var character in characters)
+            {
+                var index = character.glyphIndex;
+                if (!have.Add(index))
+                    continue;
+
+                var rect = new UnityEngine.TextCore.GlyphRect((int)(index % columns) * cell,
+                    (rows - 1 - (int)(index / columns)) * cell, cell, cell);
+                table.Add(new TMPro.TMP_SpriteGlyph(index, new UnityEngine.TextCore.GlyphMetrics(cell, cell, 0, 80, cell), rect, 1,
+                    0));
+            }
+
+            if (glyphs == null)
+                AccessTools.Field(typeof(TMPro.TMP_SpriteAsset), "m_GlyphTable").SetValue(asset, table);
+            Logger.LogInfo($"[UI] Sprite asset {asset.name}: rebuilt {table.Count} glyphs from the {columns}x{rows} sheet");
+        }
+
+        asset.UpdateLookupTables();
+        Logger.LogInfo($"[UI] Sprite asset {asset.name}: 'leftStick' → {asset.GetSpriteIndexFromName("leftStick")}, " +
+                       $"'rightTrigger' → {asset.GetSpriteIndexFromName("rightTrigger")}");
+    }
+
     public static void EnsureVRSprites(TMPro.TMP_Text? text)
     {
         var sprites = Assets.AssetCollection.TMPInputsSpriteAsset;

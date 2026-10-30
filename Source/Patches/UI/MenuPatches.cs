@@ -53,7 +53,14 @@ internal static class MenuPatches
         });
 
         // Move back button a bit down
-        __instance.transform.Find("Menu Button - Back").GetComponent<RectTransform>().anchoredPosition =
+        var back = __instance.transform.Find("Menu Button - Back");
+        back.GetComponent<RectTransform>().anchoredPosition =
             language ? vrRect.anchoredPosition - new Vector2(0, 45) : new Vector2(126, 35);
+
+        // MenuButton.ResizeToText puts a button back where it was when it woke up (originalButtonPosition), and 0.5.0
+        // calls it again when the localized text arrives: Back went back to y 35, right under VR Settings
+        foreach (var moved in new[] { vrButton.transform, back })
+            if (moved && moved.GetComponent<MenuButton>() is { } menuButton)
+                menuButton.originalButtonPosition = moved.localPosition;
     }
 }
