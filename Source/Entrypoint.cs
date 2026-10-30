@@ -59,6 +59,7 @@ internal static class Entrypoint
 
         // Add tracking to camera
         mainCamera.gameObject.AddComponent<VRCameraTracker>();
+        mainCamera.gameObject.AddComponent<VRCameraReport>();
 
         // Parent overlay to main camera
         overlayCamera.transform.SetParent(mainCamera.transform, false);
