@@ -95,8 +95,15 @@ the version you are running.
 
 ## Known issues · Известные проблемы
 
-None right now: everything works on PC, and the Quest builds the same code. · Сейчас нет: на ПК всё работает, а
-Quest собирает тот же код.
+Everything works on PC, and the Quest builds the same code · на ПК всё работает, а Quest собирает тот же код. One
+small issue · одна мелочь:
+
+- **The language page** (*Settings → Language*) shows only Text to Speech in VR: the language buttons land outside the
+  menu. The fix comes with the next version; until then start the game without VR (headset off, or the launch option
+  `--disable-vr`), pick the language on the monitor and start again in VR. · **Страница «Язык»** (*Настройки → Язык*)
+  в VR показывает только Text to Speech: кнопки языков оказываются за пределами меню. Исправление — в следующей
+  версии; а пока запустите игру без VR (шлем выключен или параметр запуска `--disable-vr`), выберите язык на мониторе
+  и запустите снова в VR.
 
 Tip · совет: the whip flings only once it has caught something; its sensitivity is in *VR Settings → Input → Whip
 Sideways / Crack Sensitivity* · хлыст бросает, только когда что-то поймал; чувствительность — в *VR Settings → Input*.
