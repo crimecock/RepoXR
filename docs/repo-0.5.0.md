@@ -28,6 +28,28 @@ Multiplayer, vehicles and weapons have not been checked anywhere yet.
 The BepInEx log (`BepInEx/LogOutput.log`) is what to attach to an issue. The port writes a few diagnostics there:
 `[Scene]`, `[Camera]` (first 40 s of a scene), `[Input]`, `[UI]`, `[Grab]`, `[FPS]`.
 
+## Starting in VR
+
+RepoXR uses OpenXR, so it runs with any PC VR runtime; nothing about the game's own launch changes (start R.E.P.O.
+from Steam as usual, with the headset connected and its PC software running). It picks the runtime in this order:
+
+1. the runtime chosen in RepoXR's VR settings (the runtime selector; saved as `OpenXRRuntimeFile` in
+   `BepInEx/config/io.daxcess.repoxr.cfg`);
+2. the system's default OpenXR runtime;
+3. any other one it finds: SteamVR, Virtual Desktop, Meta (Oculus).
+
+If the game runs as administrator, only the system default can be used.
+
+| Headset and connection | How |
+|---|---|
+| **SteamVR** (Valve Index, HTC Vive, Pico through Streaming Assistant, Quest through Steam Link or ALVR, any SteamVR headset) | Start SteamVR, then the game. If another runtime is the default, either pick SteamVR in RepoXR's runtime selector or make it the default: SteamVR → Settings → OpenXR → *Set SteamVR as OpenXR Runtime* |
+| **Meta Quest through Link or Air Link** (Meta Quest Link app) | Meta Quest Link app → Settings → General → *OpenXR Runtime*: set Meta Quest Link as active. Connect Link, then start the game from the PC |
+| **Virtual Desktop** (Quest, Pico) | Its own runtime (VDXR) is found automatically: start Virtual Desktop, then the game from its desktop. In SteamVR mode it goes through SteamVR instead |
+| **Other OpenXR runtimes** (Pico Connect, Windows Mixed Reality, ...) | Make the runtime the system default, or pick it in RepoXR's runtime selector |
+| **Without VR** | Launch option `--disable-vr`, or `DisableVR = true` in the config. You still see VR players' hands |
+
+Launch options go in Steam → R.E.P.O. → Properties → *Launch options*, e.g. `-force-d3d11` (see the risks below).
+
 ## Risks on PC
 
 | What | Why it may break | If it does |

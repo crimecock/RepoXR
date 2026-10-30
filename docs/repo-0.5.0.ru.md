@@ -29,6 +29,29 @@ Unity 6. Ветка `repo-0.5.0` в [crimecock/RepoXR](https://github.com/crimec
 К issue прикладывайте лог BepInEx (`BepInEx/LogOutput.log`). Порт пишет туда немного диагностики: `[Scene]`,
 `[Camera]` (первые 40 с сцены), `[Input]`, `[UI]`, `[Grab]`, `[FPS]`.
 
+## Запуск в VR
+
+RepoXR работает через OpenXR, поэтому подходит любой VR-рантайм для ПК; сам запуск игры не меняется (запускайте
+R.E.P.O. из Steam как обычно, со шлемом и запущенной программой шлема на ПК). Рантайм выбирается в таком порядке:
+
+1. выбранный в VR-настройках RepoXR (выбор рантайма; хранится как `OpenXRRuntimeFile` в
+   `BepInEx/config/io.daxcess.repoxr.cfg`);
+2. рантайм OpenXR по умолчанию в системе;
+3. любой другой из найденных: SteamVR, Virtual Desktop, Meta (Oculus).
+
+Если игра запущена от администратора, доступен только рантайм по умолчанию.
+
+| Шлем и подключение | Как |
+|---|---|
+| **SteamVR** (Valve Index, HTC Vive, Pico через Streaming Assistant, Quest через Steam Link или ALVR, любой шлем SteamVR) | Запустите SteamVR, потом игру. Если по умолчанию стоит другой рантайм, выберите SteamVR в выборе рантайма RepoXR или сделайте его основным: SteamVR → Settings → OpenXR → *Set SteamVR as OpenXR Runtime* |
+| **Meta Quest через Link или Air Link** (приложение Meta Quest Link) | Meta Quest Link → Settings → General → *OpenXR Runtime*: сделайте Meta Quest Link активным. Подключите Link, затем запустите игру на ПК |
+| **Virtual Desktop** (Quest, Pico) | Его собственный рантайм (VDXR) находится сам: запустите Virtual Desktop, потом игру с его рабочего стола. В режиме SteamVR игра пойдёт через SteamVR |
+| **Другие рантаймы OpenXR** (Pico Connect, Windows Mixed Reality...) | Сделайте рантайм основным в системе или выберите его в выборе рантайма RepoXR |
+| **Без VR** | Параметр запуска `--disable-vr` или `DisableVR = true` в конфиге. Руки VR-игроков всё равно видно |
+
+Параметры запуска задаются в Steam → R.E.P.O. → Свойства → *Параметры запуска*, например `-force-d3d11` (см. риски
+ниже).
+
 ## Риски на ПК
 
 | Что | Почему может сломаться | Если сломалось |
