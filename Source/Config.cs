@@ -127,6 +127,10 @@ public class Config(string assemblyPath, ConfigFile file)
             "How many lights can light an object at full quality. Too few and lights compete (a surface darkens when the flashlight comes near); more costs performance. The PC game uses 12.",
             new AcceptableValueRange<int>(1, 12)));
 
+    [ConfigDescriptor(customName: "Lamp Lighting")]
+    public ConfigEntry<bool> LampLighting { get; } = file.Create("Rendering", nameof(LampLighting), true,
+        "Light the lamps nearest to you per pixel, all in one pass, instead of Unity lighting each object with a few of them in extra passes: no seams between objects and less work for the headset, but lamps cast no shadows. Flashlights are unchanged.");
+
     [ConfigDescriptor(customName: "Other Flashlight Shadows")]
     public ConfigEntry<bool> OtherFlashlightShadows { get; } = file.Create("Rendering", nameof(OtherFlashlightShadows), false,
         "Whether other players' flashlights cast shadows. Each one renders the scene again into its own shadow map: with a full lobby this cost 7-10 ms of GPU time per frame on Quest. Their light stays either way.");
@@ -189,6 +193,7 @@ public class Config(string assemblyPath, ConfigFile file)
         PixelLightCount.SettingChanged += (_, _) => QualitySettings.pixelLightCount = PixelLightCount.Value;
         PostProcessing.SettingChanged += (_, _) => Rendering.PostProcessingSetting.Update();
         OtherFlashlightShadows.SettingChanged += (_, _) => Rendering.FlashlightShadows.Update();
+        Rendering.LampLighting.Create();
 
         CameraResolution.SettingChanged += (_, _) =>
         {
