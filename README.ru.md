@@ -211,3 +211,7 @@ Push To Talk). На Quest меню на кнопке ≡, а X выключае�
 
 Лицензия — GPL-3.0, как у RepoXR. Авторы: RepoXR — DaXcess; настройки 0001–0008 — Dobutsu; порт на 0.5.0 —
 crimecock вместе с Claude.
+
+---
+
+Оригинальный RepoXR для R.E.P.O. 0.4.4, его README, Discord и страница на Thunderstore — **[DaXcess/RepoXR](https://github.com/DaXcess/RepoXR)**.
