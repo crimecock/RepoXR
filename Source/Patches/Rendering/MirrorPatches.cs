@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.XR;
 
 using static HarmonyLib.AccessTools;
 
@@ -30,6 +31,8 @@ internal static class MirrorPatches
     internal static bool PerEye = true;
     internal static bool FlipSkew = true;
     internal static bool SwapEyes;
+    internal static bool FromDisplay = true;
+    private static readonly List<XRDisplaySubsystem> displays = [];
     internal static Action<MirrorReflection, Camera.StereoscopicEye, Vector3, Matrix4x4>? AfterEyeRender;
 
     private static bool SinglePass => Plugin.Config.SinglePassRendering.Value;
@@ -155,12 +158,43 @@ internal static class MirrorPatches
             .InstructionEnumeration();
     }
 
+    /// <summary>
+    /// The view and projection the XR display renders this eye with (in multi-pass, render pass 0 is the left eye and
+    /// pass 1 the right): the camera's stereo matrices can differ from them
+    /// </summary>
+    internal static bool EyeFromDisplay(Camera camera, Camera.StereoscopicEye eye, out Matrix4x4 view, out Matrix4x4 projection)
+    {
+        view = projection = Matrix4x4.identity;
+        if (displays.Count == 0)
+            SubsystemManager.GetSubsystems(displays);
+
+        foreach (var display in displays)
+        {
+            if (display is not { running: true } || display.GetRenderPassCount() < 2)
+                continue;
+
+            display.GetRenderPass((int)eye, out var pass);
+            if (pass.GetRenderParameterCount() < 1)
+                continue;
+
+            pass.GetRenderParameter(camera, 0, out var parameter);
+            view = parameter.view;
+            projection = parameter.projection;
+            return true;
+        }
+
+        return false;
+    }
+
     private static void RenderForEye(Camera reflection, MirrorReflection mirror, Camera source)
     {
         if (currentEye is { } eye && source)
         {
-            var view = source.GetStereoViewMatrix(eye);
-            var projection = source.GetStereoProjectionMatrix(eye);
+            if (!FromDisplay || !EyeFromDisplay(source, eye, out var view, out var projection))
+            {
+                view = source.GetStereoViewMatrix(eye);
+                projection = source.GetStereoProjectionMatrix(eye);
+            }
             var eyeToWorld = view.inverse;
             var eyePosition = eyeToWorld.MultiplyPoint(Vector3.zero);
             var eyeForward = -(Vector3)eyeToWorld.GetColumn(2);
