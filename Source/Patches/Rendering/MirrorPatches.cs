@@ -202,6 +202,14 @@ internal static class MirrorPatches
 
     private static void RenderForEye(Camera reflection, MirrorReflection mirror, Camera source)
     {
+        // The game's reflection camera is an ordinary camera, and with XR on it rendered as a stereo camera: the XR
+        // eye matrices replaced its reflected view and projection. It renders into its texture as a mono camera
+        if (reflection.stereoTargetEye != StereoTargetEyeMask.None)
+        {
+            reflection.stereoTargetEye = StereoTargetEyeMask.None;
+            Logger.LogInfo($"[Mirror] {reflection.name}: rendering mono (it was a stereo camera)");
+        }
+
         if (currentEye is { } eye && source)
         {
             if (!FromDisplay || !EyeFromDisplay(source, eye, out var view, out var projection))
