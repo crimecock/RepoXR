@@ -246,7 +246,7 @@ Every change, patch by patch: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-
 | Right grip | Interact, fire a gun, horn | Взаимодействовать, выстрел, гудок |
 | A · B | Jump · tumble | Прыжок · кувырок |
 
-Map at the shoulder, flashlight at the head, inventory, vehicles, weapons, tumble climbing: [docs/controls.md](docs/controls.md) ·
+Map at the belt or the shoulder, flashlight at the head, inventory, vehicles, weapons, tumble climbing: [docs/controls.md](docs/controls.md) ·
 [по-русски](docs/controls.ru.md). Rebind in *Settings → Controls*, where free actions (Inventory 1–3, Expression 1–6,
 Push To Talk) can get a button too · переназначение — *Настройки → Управление*. On the Quest the menu is on ≡ and X
 mutes · на Quest меню на ≡, X — микрофон ([Quest controls](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.md)).

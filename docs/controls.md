@@ -33,7 +33,8 @@ rebound in *Settings → Controls* (RepoXR lists its actions there). Left-handed
 
 ## With your hands
 
-- **Map:** bring a hand to your shoulder. When the controller buzzes, hold that hand's **grip**: the map is in your
+- **Map:** bring a hand to where the map hangs on your belt (at the hip; it moves to the other hip while you hold
+  something) or to your shoulder. When the controller buzzes, hold that hand's **grip**: the map is in your
   hand; let go and it goes away. Not while sprinting.
 - **Flashlight on the head:** bring the other (non-dominant) hand to the side of your head and press **grip**; again to
   take it back.

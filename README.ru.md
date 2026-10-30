@@ -190,7 +190,7 @@ Sensitivity*.
 | Правый grip | Взаимодействовать, выстрел, гудок |
 | A · B | Прыжок · кувырок |
 
-Карта у плеча, фонарь у головы, инвентарь, техника, оружие, лазание: [docs/controls.ru.md](docs/controls.ru.md).
+Карта у пояса или у плеча, фонарь у головы, инвентарь, техника, оружие, лазание: [docs/controls.ru.md](docs/controls.ru.md).
 Переназначить — *Настройки → Управление*; там же можно дать кнопки свободным действиям (Inventory 1–3, Expression 1–6,
 Push To Talk). На Quest меню на кнопке ≡, а X выключает микрофон ([управление на Quest](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.ru.md)).
 
