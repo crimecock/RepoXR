@@ -173,6 +173,11 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> ShowFPS { get; } = file.Create("Rendering", nameof(ShowFPS), false,
         "Shows the frame rate low in the left of your view: frames per second, the average frame time and the slowest frame of the last half second (and the CPU and GPU times when the headset reports them). Quest 3 runs the game at 72 FPS: green at 68 and above, yellow from 50, red below.");
 
+    // Quest port: Patches/Rendering/MirrorPatches.cs
+    [ConfigDescriptor(customName: "Shop Mirror")]
+    public ConfigEntry<bool> ShopMirror { get; } = file.Create("Rendering", nameof(ShopMirror), true,
+        "Shows the mirror next to the cosmetic machine in the shop. It renders the scene once more for each eye; turn it off for frame rate. With single-pass rendering it stays hidden: one reflection cannot be right for both eyes.");
+
     [ConfigDescriptor]
     public ConfigEntry<bool> Vignette { get; } = file.Create("Rendering", nameof(Vignette), true,
         "Enables the vignette shader used in certain scenarios and levels in the game.");

@@ -14,7 +14,8 @@ namespace RepoXR.Patches.Rendering;
 /// headset each eye has its own position and frustum: the reflection was a mess. In multi-pass rendering the mirror is
 /// now rendered for each eye just before that eye renders, from the eye's reflected position with the eye's own
 /// (mirrored) projection. In single-pass rendering both eyes share one reflection texture, which cannot be right for
-/// either of them: the mirror is hidden there, which also saves rendering the scene again (the Quest's default)
+/// either of them: the mirror is hidden there, which also saves rendering the scene again (the Quest's default).
+/// VR Settings → Rendering → Shop Mirror (on by default) hides it too
 /// </summary>
 [RepoXRPatch]
 internal static class MirrorPatches
@@ -26,6 +27,7 @@ internal static class MirrorPatches
     private static bool loggedError;
 
     private static bool SinglePass => Plugin.Config.SinglePassRendering.Value;
+    private static bool Shown => Plugin.Config.ShopMirror.Value && !SinglePass;
 
     [HarmonyPatch(typeof(MirrorReflection), nameof(MirrorReflection.OnEnable))]
     [HarmonyPostfix]
@@ -35,15 +37,30 @@ internal static class MirrorPatches
         if (!subscribed)
         {
             Camera.onPreRender += OnCameraPreRender;
+            Plugin.Config.ShopMirror.SettingChanged += (_, _) => ShowOrHideAll();
             subscribed = true;
         }
 
-        var renderer = __instance.GetComponent<Renderer>();
-        if (renderer && SinglePass)
-        {
-            renderer.enabled = false;
-            Logger.LogInfo($"[Mirror] {__instance.name}: hidden (single-pass rendering shares one reflection between both eyes)");
-        }
+        ShowOrHide(__instance);
+        if (!Shown)
+            Logger.LogInfo($"[Mirror] {__instance.name}: hidden ({(SinglePass ? "single-pass rendering shares one reflection between both eyes" : "VR Settings → Rendering → Shop Mirror is off")})");
+    }
+
+    private static void ShowOrHideAll()
+    {
+        foreach (var mirror in mirrors)
+            if (mirror)
+                ShowOrHide(mirror);
+    }
+
+    /// <summary>
+    /// A hidden mirror's renderer is off; the game renders no reflection for a disabled renderer (ShouldRender)
+    /// </summary>
+    private static void ShowOrHide(MirrorReflection mirror)
+    {
+        var renderer = mirror.mirrorRenderer ? mirror.mirrorRenderer : mirror.GetComponent<Renderer>();
+        if (renderer)
+            renderer.enabled = Shown;
     }
 
     [HarmonyPatch(typeof(MirrorReflection), nameof(MirrorReflection.OnDisable))]
@@ -73,7 +90,7 @@ internal static class MirrorPatches
 
     private static void OnCameraPreRender(Camera camera)
     {
-        if (!camera || !camera.stereoEnabled || mirrors.Count == 0 || SinglePass)
+        if (!camera || !camera.stereoEnabled || mirrors.Count == 0 || !Shown)
             return;
 
         var active = camera.stereoActiveEye;
