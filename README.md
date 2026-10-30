@@ -91,7 +91,7 @@ Being worked on; none of them stops the game. · Чиним; играть ни �
 | No chat in singleplayer · нет чата в одиночной игре | PC, Quest | As in R.E.P.O. 0.5.0 itself; works in multiplayer · так в самой игре; в мультиплеере работает |
 | The tutorial shows the game's texts (with the VR controller icons), not RepoXR's VR-specific ones · в обучении тексты игры (со значками контроллера), а не VR-тексты RepoXR | PC | 0.5.0's Addressables do not read RepoXR's JSON catalog on PC · Addressables 0.5.0 на ПК не читают JSON-каталог RepoXR |
 | Whip: fling only once it has caught something; sensitivity may need tuning · хлыст: бросок — только когда он что-то поймал; чувствительность может понадобиться подстроить | PC, Quest | VR Settings → Input → *Whip Sideways / Crack Sensitivity* |
-| Not tested yet: the shop mirror, the expression wheel, Pony, Sunstone Valley · ещё не проверено: зеркало в магазине, колесо эмоций, Pony, Sunstone Valley | PC, Quest | Reports welcome · пишите, если что-то не так |
+| Not tested yet: the shop mirror · ещё не проверено: зеркало в магазине | PC, Quest | Reports welcome · пишите, если что-то не так |
 
 Found something else? Attach `BepInEx/LogOutput.log` to an [issue](https://github.com/crimecock/RepoXR/issues). ·
 Нашли что-то ещё? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
