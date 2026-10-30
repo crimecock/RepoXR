@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **This is an unofficial fork: RepoXR 1.2.3 ported to R.E.P.O. 0.5.0 (Unity 6).** Branch `repo-0.5.0`.
+> The same source plays on a Quest 3 in the standalone [repo-quest-vr](https://github.com/crimecock/repo-quest-vr)
+> build; the PC (BepInEx) release is **experimental and not tested in VR yet**. What changed, how to install it and the
+> risks: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-русски](README.ru.md).
+> Report problems with this fork [here](https://github.com/crimecock/RepoXR/issues), not to DaXcess.
+
 # R.E.P.O. VR Mod
 
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/DaXcess/RepoXR?style=for-the-badge&logo=thunderstore&logoColor=white)](https://thunderstore.io/c/repo/p/DaXcess/RepoXR)

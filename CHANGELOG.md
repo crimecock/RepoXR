@@ -1,3 +1,20 @@
+# 1.2.3-repo0.5.0-alpha.1 (unofficial fork)
+
+Port to R.E.P.O. 0.5.0 (Unity 6000.3); details in [docs/repo-0.5.0.md](docs/repo-0.5.0.md).
+
+**Changes**:
+- Game API changes of 0.5.0 followed: renamed input keys (`UIClick`), new overloads, the new text prompt page, the
+  climb rotation, vehicles and their keys, gun aim and grab release from the hand
+- Menus: pointer mode kept, hover areas on the world-space canvas, `XRUIInputModule` on the scene's EventSystem, the
+  pointer hits canvases by hand where XRI's UI raycast finds nothing, the first main menu unblocked, the VR Settings
+  button moved below the new Language tab, the asset bundle's texts get the game's font
+- Grabbing works again with *Item Unequip Auto Hold* (`ForceHoldPatch` follows `GrabInputActiveGet`)
+- Scene handoff: RepoXR's root objects move into the loaded scene, the Reload scene's camera is no longer the main
+  camera, and shared XR actions stay enabled (the view followed the head only in the tutorial)
+- From repo-quest-vr: Head Bob, Post Processing and other players' flashlight shadows settings, an FPS counter; the
+  Quest-only Pixel Lights, Lamp Lighting and Level Culling are hidden on PC
+- Tested on a Quest 3 (standalone build); the PC build is not tested in VR yet
+
 # 1.2.3
 
 **Changes**:
