@@ -32,6 +32,7 @@ internal static class MirrorPatches
     internal static bool FlipSkew = true;
     internal static bool SwapEyes;
     internal static bool FromDisplay = true;
+    internal static bool InPreCull;
     private static readonly List<XRDisplaySubsystem> displays = [];
     internal static Action<MirrorReflection, Camera.StereoscopicEye, Vector3, Matrix4x4>? AfterEyeRender;
 
@@ -46,6 +47,7 @@ internal static class MirrorPatches
         if (!subscribed)
         {
             Camera.onPreRender += OnCameraPreRender;
+            Camera.onPreCull += OnCameraPreCull;
             Plugin.Config.ShopMirror.SettingChanged += (_, _) => ShowOrHideAll();
             subscribed = true;
         }
@@ -97,7 +99,19 @@ internal static class MirrorPatches
         return false;
     }
 
+    private static void OnCameraPreCull(Camera camera)
+    {
+        if (InPreCull)
+            RenderForCamera(camera);
+    }
+
     private static void OnCameraPreRender(Camera camera)
+    {
+        if (!InPreCull)
+            RenderForCamera(camera);
+    }
+
+    private static void RenderForCamera(Camera camera)
     {
         if (!PerEye || !camera || !camera.stereoEnabled || mirrors.Count == 0 || !Shown)
             return;
