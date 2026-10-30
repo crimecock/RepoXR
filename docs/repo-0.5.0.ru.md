@@ -56,8 +56,8 @@ R.E.P.O. из Steam как обычно, со шлемом и запущенно
 
 | Что | Почему может сломаться | Если сломалось |
 |---|---|---|
-| Библиотеки OpenXR | В релизе — `UnityOpenXR.dll`, `openxr_loader.dll` и управляемые XR-пакеты из RepoXR 1.2.3, собранные под Unity 2022. Unity 6 может их не принять или вести себя иначе | В логе не проходит `[RepoXR] Loading VR...`. Тогда нужны бинарники OpenXR-плагина, собранные Unity 6 |
-| Графический API | Unity 6 может запускать игру на Direct3D 12, а OpenXR-плагин времён RepoXR 1.2.3 рассчитан на Direct3D 11 | Попробуйте параметр запуска `-force-d3d11` |
+| Библиотеки OpenXR | С alpha 2 — от Unity 6: OpenXR-плагин 1.14.3 (нативные `UnityOpenXR.dll` и `openxr_loader.dll` для Windows x64 из пакета), XR Management 4.5.0, XR Interaction Toolkit 2.6.4, XR Core Utils 2.6.0, Legacy Input Helpers 2.1.13 — те же версии, что работают в сборке для Quest. Управляемые собраны под Windows вне редактора Unity (ниже); все члены, которые использует RepoXR, в них находятся, но на Windows они ещё не запускались | В логе не проходит `[RepoXR] Loading VR...` или есть `MissingMethodException` / `TypeLoadException` со сборкой `Unity.XR` |
+| Графический API | Unity 6 может запускать игру на Direct3D 12 (в игре есть `D3D12Core.dll`), а RepoXR до сих пор работал только на Direct3D 11 | Попробуйте параметр запуска `-force-d3d11` |
 | FixPluginTypesSerialization | Подменяет функции нативного плеера Unity, чтобы загрузить компоненты из бандла RepoXR; сделан под Unity 2022 | Нет VR-интерфейса, ошибки про скрипты в `repoxrassets` |
 | Бандл ассетов RepoXR и Addressables | Собраны Unity 2022. Шрифты исправлены в коде (ниже); шейдеры и каталог Addressables 1.x под Addressables 2 из 0.5.0 на ПК не проверены | Розовый или пропавший VR-интерфейс, ошибки загрузки `catalog_0.1.json` |
 
@@ -104,6 +104,14 @@ R.E.P.O. из Steam как обычно, со шлемом и запущенно
 ## Сборка
 
 Как у RepoXR 1.2.3 ([COMPILING.md](../COMPILING.md)), но со сборками R.E.P.O. 0.5.0 (Unity 6000.3.17f1).
+
+XR-библиотеки релиза: [`tools/xr-deps/build.py`](../tools/xr-deps/build.py) заново компилирует шесть XR-пакетов под
+Windows из проекта Unity 6, где они есть и который один раз собирался в плеер (подходит Quest-проект repo-quest-vr).
+Скрипт берёт аргументы компилятора, с которыми собирал Unity (`Library/Bee/artifacts/*P.dag/<сборка>.rsp`), меняет
+define платформы на `UNITY_STANDALONE_WIN`, а ссылки — на `REPO_Data/Managed` ПК-игры, и обходится без генераторов
+кода Unity (этим пакетам они в рантайме не нужны). `Unity.Mathematics` больше не кладётся: у игры есть своя (1.3.2), и
+XR-пакеты собраны с ней. Нативные `UnityOpenXR.dll` и `openxr_loader.dll` — файлы пакета из `Runtime/windows/x64` и
+`RuntimeLoaders/windows/x64`.
 
 ## Авторы
 

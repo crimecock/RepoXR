@@ -54,8 +54,8 @@ Launch options go in Steam → R.E.P.O. → Properties → *Launch options*, e.g
 
 | What | Why it may break | If it does |
 |---|---|---|
-| OpenXR runtime libraries | The release carries RepoXR 1.2.3's `UnityOpenXR.dll`, `openxr_loader.dll` and the managed XR packages, built for Unity 2022. Unity 6 may refuse them or behave differently | The log shows `[RepoXR] Loading VR...` failing. Newer OpenXR plugin binaries (built with Unity 6) would be needed |
-| Graphics API | Unity 6 can run the game on Direct3D 12; Unity's OpenXR plugin of RepoXR 1.2.3's time is made for Direct3D 11 | Try the launch option `-force-d3d11` |
+| OpenXR runtime libraries | Since alpha 2 they are Unity 6 ones: OpenXR plugin 1.14.3 (native `UnityOpenXR.dll` and `openxr_loader.dll` for Windows x64 from the package), XR Management 4.5.0, XR Interaction Toolkit 2.6.4, XR Core Utils 2.6.0, Legacy Input Helpers 2.1.13 — the versions the Quest build runs. The managed ones are compiled for Windows outside the Unity editor (below); RepoXR resolves every member it uses in them, but they have not run on Windows yet | The log shows `[RepoXR] Loading VR...` failing, or a `MissingMethodException` / `TypeLoadException` naming a `Unity.XR` assembly |
+| Graphics API | Unity 6 can run the game on Direct3D 12 (the game ships `D3D12Core.dll`); RepoXR was only ever used on Direct3D 11 | Try the launch option `-force-d3d11` |
 | FixPluginTypesSerialization | It hooks Unity's native player to load RepoXR's asset bundle components; it was made for Unity 2022 | Missing VR UI, errors about scripts in `repoxrassets` |
 | RepoXR's asset bundle and Addressables | Built with Unity 2022. Fonts are handled in code (below); its shaders and the Addressables 1.x catalog under 0.5.0's Addressables 2 are untested on PC | Pink or missing VR UI, errors loading `catalog_0.1.json` |
 
@@ -101,6 +101,15 @@ Rendering), and diagnostics (0013, 0016, 0018, 0027).
 ## Building
 
 As RepoXR 1.2.3 ([COMPILING.md](../COMPILING.md)), against the assemblies of R.E.P.O. 0.5.0 (Unity 6000.3.17f1).
+
+The XR runtime libraries of the release: [`tools/xr-deps/build.py`](../tools/xr-deps/build.py) compiles the six XR
+packages again for Windows from a Unity 6 project that has them and was built once for a player (repo-quest-vr's
+Quest project is one). It takes the compiler arguments Unity used (`Library/Bee/artifacts/*P.dag/<assembly>.rsp`),
+swaps the platform defines for `UNITY_STANDALONE_WIN` and the references for the PC game's `REPO_Data/Managed`, and
+leaves out Unity's source generators (none of these packages needs them at runtime). `Unity.Mathematics` is not
+shipped any more: the game has its own (1.3.2), and the XR packages are compiled against it. The native
+`UnityOpenXR.dll` and `openxr_loader.dll` are the package's `Runtime/windows/x64` and `RuntimeLoaders/windows/x64`
+files.
 
 ## Credits
 

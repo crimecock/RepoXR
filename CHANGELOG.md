@@ -1,3 +1,12 @@
+# 1.2.3-repo0.5.0-alpha.2 (unofficial fork)
+
+**Changes**:
+- Unity 6 XR runtime libraries instead of RepoXR 1.2.3's Unity 2022 ones: OpenXR plugin 1.14.3 (native plugin and
+  loader for Windows x64), XR Management 4.5.0, XR Interaction Toolkit 2.6.4, XR Core Utils 2.6.0, Legacy Input
+  Helpers 2.1.13, compiled for Windows by `tools/xr-deps/build.py`; the game's own Unity.Mathematics is used
+- The ways to start in VR are documented (SteamVR, Meta Quest Link, Virtual Desktop, other OpenXR runtimes)
+- Still not tested in VR on PC
+
 # 1.2.3-repo0.5.0-alpha.1 (unofficial fork)
 
 Port to R.E.P.O. 0.5.0 (Unity 6000.3); details in [docs/repo-0.5.0.md](docs/repo-0.5.0.md).
