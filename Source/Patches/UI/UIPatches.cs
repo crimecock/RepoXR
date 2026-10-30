@@ -136,6 +136,51 @@ internal static class UIPatches
     }
 
     /// <summary>
+    /// R.E.P.O. 0.5.0 sizes the hover area as rect size × lossyScale (screen pixels on its screen-space canvas). The
+    /// VR pointer and the element positions are in the menu page's local units, and the world-space menu canvas is
+    /// scaled to 0.03: the hover area shrank to a speck in each button's corner and nothing could be pointed at.
+    /// Scale relative to the menu page instead, which is 1 for the page's own elements
+    /// </summary>
+    [HarmonyPatch(typeof(SemiFunc), nameof(SemiFunc.UIMouseHover))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> UIPointerHoverScalePatch(IEnumerable<CodeInstruction> instructions)
+    {
+        var lossyScale = PropertyGetter(typeof(Transform), nameof(Transform.lossyScale));
+        var replaced = 0;
+        foreach (var instruction in instructions)
+        {
+            if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) &&
+                Equals(instruction.operand, lossyScale))
+            {
+                instruction.opcode = OpCodes.Call;
+                instruction.operand = ((Func<Transform, Vector3>)ScaleInMenuPage).Method;
+                replaced++;
+            }
+
+            yield return instruction;
+        }
+
+        if (replaced == 0)
+            throw new InvalidOperationException("SemiFunc.UIMouseHover: no Transform.lossyScale to replace");
+    }
+
+    private static Vector3 ScaleInMenuPage(Transform transform)
+    {
+        var scale = transform.lossyScale;
+        if (XRRayInteractorManager.Instance is null)
+            return scale;
+
+        var page = transform.GetComponentInParent<MenuPage>();
+        if (!page)
+            return scale;
+
+        var reference = page.transform.lossyScale;
+        return new Vector3(reference.x != 0 ? scale.x / reference.x : scale.x,
+            reference.y != 0 ? scale.y / reference.y : scale.y,
+            reference.z != 0 ? scale.z / reference.z : scale.z);
+    }
+
+    /// <summary>
     /// Properly set the mouse hold position
     /// </summary>
     [HarmonyPatch(typeof(MenuManager), nameof(MenuManager.Update))]

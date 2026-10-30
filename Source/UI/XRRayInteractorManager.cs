@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using RepoXR.Assets;
 using RepoXR.Input;
 using UnityEngine;
@@ -33,9 +34,45 @@ public class XRRayInteractorManager : MonoBehaviour
         UpdateActiveController(ActiveController.Right);
     }
 
+    private float nextInputReport;
+    private int inputReports;
+
+    // Quest port: what the Input System sees, a few times after the menu opens (devices, the UI press bindings and
+    // their values, the hand pose), to tell missing devices from unbound actions from a missed click
+    private void ReportInput()
+    {
+        var devices = string.Join(", ", InputSystem.devices.Select(d => $"{d.layout}{(d.enabled ? "" : " (disabled)")}"));
+        Logger.LogInfo($"[UI] input devices: {devices}");
+        foreach (var (hand, controller) in new[] { ("Left", leftActions), ("Right", rightActions) })
+        {
+            var press = controller.uiPressAction.action;
+            var position = controller.positionAction.action;
+            Logger.LogInfo(press == null
+                ? $"[UI] {hand} UI Press: no action"
+                : $"[UI] {hand} UI Press: enabled {press.enabled}, map {press.actionMap?.name} enabled {press.actionMap?.enabled}, " +
+                  $"bindings [{string.Join("; ", press.bindings.Select(b => b.effectivePath))}], " +
+                  $"controls [{string.Join("; ", press.controls.Select(c => c.path))}], pressed {press.IsPressed()}, " +
+                  $"position {(position == null ? "none" : $"{position.enabled} {position.controls.Count} controls {position.ReadValue<Vector3>()}")}");
+        }
+    }
+
     // Quest port: one log line per trigger press while a menu is up, to see why a click does or does not land
     private void Update()
     {
+        if (inputReports < 6 && Time.unscaledTime >= nextInputReport)
+        {
+            nextInputReport = Time.unscaledTime + 5f;
+            inputReports++;
+            try
+            {
+                ReportInput();
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"[UI] input report failed: {e.Message}");
+            }
+        }
+
         var (interactor, actions) = GetActiveInteractor();
         if (!actions.uiPressAction.action.WasPressedThisFrame())
             return;
