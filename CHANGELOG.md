@@ -1,3 +1,13 @@
+# Unreleased (unofficial fork)
+
+**Changes**:
+- Builds from a clone: `RepoXR.csproj` takes R.E.P.O. 0.5.0, Unity 6, Photon and Steamworks from your game folder
+  (`-p:GamePath=`) and the Unity 6 XR libraries from the all-in-one zip, instead of NuGet's R.E.P.O. 0.4.4 and Unity 2022;
+  needs the .NET 10 SDK (C# 14). With `-p:DebugSymbols=false` the DLL has alpha 6's code. Steps: README, COMPILING.md
+- `tools/package/make_release.py` makes both release zips from scratch (BepInEx, FixPluginTypesSerialization, DaXcess's
+  RepoXR 1.2.3 parts, Unity 6 XR libraries, your DLL), every download checked by SHA-256; with alpha 6's DLL the
+  all-in-one zip comes out byte for byte as alpha 6's
+
 # 1.2.3-repo0.5.0-alpha.6 (unofficial fork)
 
 **Changes**:

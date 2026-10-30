@@ -92,6 +92,8 @@ Windows and against the PC game's DLLs; the native OpenXR DLLs come from the pro
 `Runtime/windows/x64` and `RuntimeLoaders/windows/x64`).
 
 Checked: with alpha 6's DLL, the all-in-one zip comes out byte for byte as the alpha 6 release (SHA-256 6063f8fb…).
+Keep the alpha 6 release and its zips on GitHub: this script and repo-quest-vr's `scripts/prepare-repoxr.sh` take the
+Unity 6 XR libraries from there by URL and SHA-256. New releases, pre-releases or not, change nothing for them.
 · **По-русски:** `python3 tools/package/make_release.py alpha.7` собирает оба архива релиза с нуля: BepInEx — с GitHub,
 FixPluginTypesSerialization и неизменные части RepoXR 1.2.3 — с Thunderstore, XR-библиотеки Unity 6 — из релиза alpha 6
 или сами (`--unity-project` с Quest-проектом repo-quest-vr), ваша `RepoXR.dll`. Каждое скачивание проверяется по
