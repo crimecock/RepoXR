@@ -78,6 +78,12 @@ the version you are running.
 
 ## Build from source · Сборка из исходников
 
+**To play you build nothing:** the all-in-one zip has RepoXR.dll ready-made. Build it only to change the mod. The
+Quest build ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr)) bakes the same DLL into the game: same code,
+built from DaXcess's RepoXR plus its patches ([how](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/build-repoxr.md)).
+· **Чтобы играть, собирать ничего не нужно:** в архиве «всё в одном» RepoXR.dll уже готова; собирать — только чтобы
+менять мод. Сборка для Quest встраивает в игру ту же DLL.
+
 NuGet only has R.E.P.O. 0.4.4, so this fork builds against your game folder (with the all-in-one zip unpacked in it).
 You need the [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0) (RepoXR is written in C# 14; .NET 8
 fails with `CS0106`) and internet for NuGet:
