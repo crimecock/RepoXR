@@ -1,3 +1,18 @@
+# 1.2.3-repo0.5.0-alpha.4 (unofficial fork)
+
+**Changes**:
+- The VR controller icons show again (settings → controls, the tutorial, prompts): RepoXR's icon sprite asset was made
+  with Unity 2022's TextMeshPro, whose glyph table, material and hash code Unity 6's TextMeshPro does not read; they
+  are rebuilt when the asset bundle loads (`Utils.RepairSpriteAsset`)
+- Text tags such as `[move]` and `[grab]` are replaced again: 0.5.0 keeps them in `InputGlyphs.tagDictionary`, and the
+  old `InputManager.tagDictionary` is empty
+- Toggles in the world-space menus highlight the selected option (`MenuTwoOptions.OptionBoxX` compares the buttons in
+  canvas space), and RepoXR's own toggles show their labels
+- The *VR Settings* button no longer lands on *Back* (the moved buttons keep their place when the localized text
+  arrives and `MenuButton.ResizeToText` runs again)
+- Tested on PC (SteamVR, Virtual Desktop): settings, VR settings, the controls page, the tutorial, riding the vehicles;
+  everything from alpha 3 still works
+
 # 1.2.3-repo0.5.0-alpha.3 (unofficial fork)
 
 **Changes**:

@@ -2,7 +2,7 @@
 > **This is an unofficial fork: RepoXR 1.2.3 ported to R.E.P.O. 0.5.0 (Unity 6).** Branch `repo-0.5.0`.
 > The same source plays on a Quest 3 in the standalone [repo-quest-vr](https://github.com/crimecock/repo-quest-vr)
 > build; the PC (BepInEx) release **plays in VR on Windows** (SteamVR, Virtual Desktop; Quest controllers): menus, levels,
-> the shop, grabbing, guns, the whip, tumble climbing, multiplayer. What
+> the shop, grabbing, guns, the whip, tumble climbing, the settings menus, multiplayer. What
 > changed, how to install it and the risks: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-русски](README.ru.md).
 > Report problems with this fork [here](https://github.com/crimecock/RepoXR/issues), not to DaXcess.
 
@@ -78,8 +78,8 @@ the version you are running.
 | Whip: crack and fling by swinging the controller · хлыст: щелчок и бросок взмахом контроллера | ✅ alpha 3 | alpha 3 fix, to check · исправление, проверяется |
 | Tumble climb · лазание в кувырке | ✅ | to check · проверяется |
 | Main menu news popup (bottom right) · новость в главном меню | ✅ alpha 3 | alpha 3 fix, to check · исправление, проверяется |
-| Vehicles · техника | first test fine, checking · в первом тесте нормально, проверяется | to check · проверяется |
-| Settings menus · меню настроек | works, visual glitches (toggles, sliders) · работает, визуальные баги (переключатели, ползунки) | same · так же |
+| Vehicles · техника | ✅ | to check · проверяется |
+| Settings menus, VR controls page · меню настроек, страница управления VR | ✅ alpha 4 | alpha 4 fix (1.0.7-qc23), to check · исправление alpha 4 (qc23), проверяется |
 | Multiplayer with other players · мультиплеер с другими | ✅ | ✅ |
 
 ## Known issues · Известные проблемы
@@ -88,13 +88,10 @@ Being worked on; none of them stops the game. · Чиним; играть ни �
 
 | Issue · Проблема | Where · Где | Notes · Подробности |
 |---|---|---|
-| Settings menus look off: toggles can highlight the wrong option, sliders sit or move off their bar · меню настроек выглядят криво: у переключателей рамка бывает не на том варианте, ползунки съезжают с полоски | PC, Quest | The settings still work; 0.5.0's menus measure positions in screen units, RepoXR shows them in 3D · настройки работают; меню 0.5.0 считают позиции в экранных единицах, а RepoXR показывает их в 3D |
-| VR controls page (rebinding): `?` instead of the controller button icons · страница управления VR (переназначение): `?` вместо значков кнопок контроллера | PC, Quest | Rebinding itself works · само переназначение работает |
-| Settings page: the *VR Settings* button can overlap the button next to it · страница настроек: кнопка *VR Settings* может налезать на соседнюю кнопку | PC, Quest | Both buttons still work · обе кнопки работают |
 | No chat in singleplayer · нет чата в одиночной игре | PC, Quest | As in R.E.P.O. 0.5.0 itself; works in multiplayer · так в самой игре; в мультиплеере работает |
-| The tutorial shows the game's texts, not RepoXR's VR ones · в обучении тексты игры, а не VR-тексты RepoXR | PC | 0.5.0's Addressables do not read RepoXR's JSON catalog on PC · Addressables 0.5.0 на ПК не читают JSON-каталог RepoXR |
+| The tutorial shows the game's texts (with the VR controller icons), not RepoXR's VR-specific ones · в обучении тексты игры (со значками контроллера), а не VR-тексты RepoXR | PC | 0.5.0's Addressables do not read RepoXR's JSON catalog on PC · Addressables 0.5.0 на ПК не читают JSON-каталог RepoXR |
 | Whip: fling only once it has caught something; sensitivity may need tuning · хлыст: бросок — только когда он что-то поймал; чувствительность может понадобиться подстроить | PC, Quest | VR Settings → Input → *Whip Sideways / Crack Sensitivity* |
-| Not tested yet: riding vehicles properly, the shop mirror, the expression wheel, Pony, Sunstone Valley · ещё не проверено: нормальная езда на технике, зеркало в магазине, колесо эмоций, Pony, Sunstone Valley | PC, Quest | Reports welcome · пишите, если что-то не так |
+| Not tested yet: the shop mirror, the expression wheel, Pony, Sunstone Valley · ещё не проверено: зеркало в магазине, колесо эмоций, Pony, Sunstone Valley | PC, Quest | Reports welcome · пишите, если что-то не так |
 
 Found something else? Attach `BepInEx/LogOutput.log` to an [issue](https://github.com/crimecock/RepoXR/issues). ·
 Нашли что-то ещё? Приложите `BepInEx/LogOutput.log` к [issue](https://github.com/crimecock/RepoXR/issues).
@@ -150,7 +147,14 @@ Found something else? Attach `BepInEx/LogOutput.log` to an [issue](https://githu
    старый экран загрузки затирал ссылку на новый; исправлено.
 7. **The news popup's text was solid bars (alpha 3).** The popup grows from nothing; its texts are built again once
    it has grown, and its scale keeps a depth of 1. **Новость в главном меню рисовалась плашками** — исправлено.
-8. Plus: renamed and new game APIs (16 patch classes), vehicles and their new keys on the left stick, guns aimed from
+8. **Settings menus and controller icons (alpha 4).** RepoXR's asset bundle was made with Unity 2022's TextMeshPro;
+   Unity 6's reads the controller icon sheet without its glyphs and material, so every icon was a `?` (or nothing).
+   They are rebuilt when the bundle loads. 0.5.0 also moved the text tags (`[move]`, `[grab]` …) to `InputGlyphs`, so
+   the tutorial and prompts showed `[move]` instead of an icon. Toggles: the selection box compared world positions,
+   which flip on a menu that hangs in 3D, and RepoXR's own toggles lacked 0.5.0's label fields; the *VR Settings*
+   button no longer lands on *Back*. **Меню настроек и значки контроллера (alpha 4)**: значки вместо `?`, `[move]` в
+   обучении, рамка переключателей, подписи, кнопка VR Settings — исправлено.
+9. Plus: renamed and new game APIs (16 patch classes), vehicles and their new keys on the left stick, guns aimed from
    the hand, the VR Settings button moved off the new *Language* tab, fonts of RepoXR's 2022 asset bundle.
    Ещё: переименованные API игры, техника на левом стике, прицел пушек от руки, кнопка VR Settings, шрифты.
 
