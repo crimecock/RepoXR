@@ -454,8 +454,8 @@ internal static class InputPatches
         }
 
         // 0.5.0 keeps its tags ([move], [grab], ...) in InputGlyphs.tagDictionary (a tag can stand for several keys);
-        // InputManager.tagDictionary is still there but nothing fills it, and with it every tag stayed as it was:
-        // "Use [move] to move" in the tutorial, the chat prompt, the skip texts
+        // InputManager.tagDictionary is still there, but the game no longer fills it, and with only that every game tag
+        // stayed as it was: "Use [move] to move" in the tutorial, the chat prompt, the skip texts
         var _text = __0;
         if (InputGlyphs.tagDictionary is { Count: > 0 } glyphTags)
         {
@@ -464,10 +464,14 @@ internal static class InputPatches
                     _text = _text.Replace(tag, string.Join("/", keys.Select(key =>
                         __instance.InputDisplayGet(key, KeyType.InputKey, MovementDirection.Up)).Distinct()));
         }
-        else
+
+        // RepoXR's own tags ([MapGrabLeft], [MapGrabRight], ...: OnInputManagerStart) stay in InputManager.tagDictionary
+        if (__instance.tagDictionary != null)
             _text = __instance.tagDictionary.Aggregate(_text,
-                (current, keyValuePair) => current.Replace(keyValuePair.Key,
-                    __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up)));
+                (current, keyValuePair) => current.Contains(keyValuePair.Key)
+                    ? current.Replace(keyValuePair.Key,
+                        __instance.InputDisplayGet(keyValuePair.Value, KeyType.InputKey, MovementDirection.Up))
+                    : current);
 
         __result = _text;
 

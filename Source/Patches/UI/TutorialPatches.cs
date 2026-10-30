@@ -91,27 +91,81 @@ internal static class TutorialPatches
     [HarmonyPostfix]
     private static void OnTutorialDirectorCreate(TutorialDirector __instance)
     {
-        // Replace some tutorial text with VR equivalents
-        var inventoryFill = __instance.tutorialPages[10];
-        var inventoryEmpty = __instance.tutorialPages[11];
-        var map = __instance.tutorialPages[12];
-        var expressions = __instance.tutorialPages[25];
-
-        // Without RepoXR's translations (PC on 0.5.0, see AssetCollection.LoadAssets) the game's texts stay
-        if (!AssetCollection.TranslationsLoaded)
+        // RepoXR's VR texts exist in English only: in any other language the game's own (translated) texts stay, which
+        // also show the VR controller icons
+        var locale = UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale;
+        if (locale && !locale.Identifier.Code.StartsWith("en", StringComparison.OrdinalIgnoreCase))
             return;
 
-        inventoryFill.localizedText = Utils.L("TUTORIAL.INVENTORY_FILL.TEXT") ?? inventoryFill.localizedText;
-        inventoryFill.localizedDummyText = Utils.L("TUTORIAL.INVENTORY_FILL.DUMMY_TEXT") ?? inventoryFill.localizedDummyText;
+        // Replace some tutorial text with VR equivalents (the pages are checked: their indices are those of 0.4.4)
+        var inventoryFill = Page(__instance, 10, "inventory");
+        var inventoryEmpty = Page(__instance, 11, "inventory");
+        var map = Page(__instance, 12, "map");
+        var expressions = Page(__instance, 25, "express");
 
-        inventoryEmpty.localizedText = Utils.L("TUTORIAL.INVENTORY_EMPTY.TEXT") ?? inventoryEmpty.localizedText;
-        inventoryEmpty.localizedDummyText = Utils.L("TUTORIAL.INVENTORY_EMPTY.DUMMY_TEXT") ?? inventoryEmpty.localizedDummyText;
-
-        map.localizedText = Utils.L("TUTORIAL.MAP.TEXT") ?? map.localizedText;
-        map.localizedDummyText = Utils.L("TUTORIAL.MAP.DUMMY_TEXT") ?? map.localizedDummyText;
-
-        expressions.localizedText = Utils.L("TUTORIAL.EXPRESSIONS.TEXT") ?? expressions.localizedText;
+        Replace(inventoryFill, "TUTORIAL.INVENTORY_FILL.TEXT", "TUTORIAL.INVENTORY_FILL.DUMMY_TEXT");
+        Replace(inventoryEmpty, "TUTORIAL.INVENTORY_EMPTY.TEXT", "TUTORIAL.INVENTORY_EMPTY.DUMMY_TEXT");
+        Replace(map, "TUTORIAL.MAP.TEXT", "TUTORIAL.MAP.DUMMY_TEXT");
+        Replace(expressions, "TUTORIAL.EXPRESSIONS.TEXT", null);
     }
+
+    private static TutorialDirector.TutorialPage? Page(TutorialDirector director, int index, string word)
+    {
+        if (index >= director.tutorialPages.Count)
+            return null;
+
+        var page = director.tutorialPages[index];
+        var text = (page.localizedText ? page.localizedText.GetLocalizedString(null) : null) ?? page.text ?? "";
+        if (text.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 ||
+            (page.text ?? "").IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 ||
+            (page.pageName ?? "").IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
+            return page;
+
+        Logger.LogWarning($"[Tutorial] page {index} ('{page.pageName}') is not about '{word}' any more: its text stays");
+        return null;
+    }
+
+    private static void Replace(TutorialDirector.TutorialPage? page, string textKey, string? dummyKey)
+    {
+        if (page == null)
+            return;
+
+        // Through RepoXR's translations when they load (the Quest); on PC 0.5.0's Addressables cannot read RepoXR's
+        // JSON catalog (see AssetCollection.LoadAssets), and the same English texts are built in
+        if (AssetCollection.TranslationsLoaded)
+        {
+            page.localizedText = Utils.L(textKey) ?? page.localizedText;
+            if (dummyKey != null)
+                page.localizedDummyText = Utils.L(dummyKey) ?? page.localizedDummyText;
+            return;
+        }
+
+        if (BuiltInTexts.TryGetValue(textKey, out var text))
+        {
+            page.localizedText = null!;
+            page.text = text;
+        }
+
+        if (dummyKey != null && BuiltInTexts.TryGetValue(dummyKey, out var dummy))
+        {
+            page.localizedDummyText = null!;
+            page.dummyText = dummy;
+        }
+    }
+
+    /// <summary>
+    /// RepoXR's English VR tutorial texts (its string table "HUD RepoXR", en-US)
+    /// </summary>
+    private static readonly Dictionary<string, string> BuiltInTexts = new()
+    {
+        ["TUTORIAL.INVENTORY_FILL.TEXT"] = "Grab an Item and deposit it in one of the slots in front of you to put it in your inventory.",
+        ["TUTORIAL.INVENTORY_FILL.DUMMY_TEXT"] = "Grab ([grab]) an item, hold it and deposit it in one of the three slots in front of you. Fill all spots in your inventory to complete the progress bar!",
+        ["TUTORIAL.INVENTORY_EMPTY.TEXT"] = "Use [grab] with your right hand to take an item out of your inventory.",
+        ["TUTORIAL.INVENTORY_EMPTY.DUMMY_TEXT"] = "Use [grab] while holding your right hand over an item in your inventory, and empty all spots to fill the progress bar!",
+        ["TUTORIAL.MAP.TEXT"] = "Use [MapGrabLeft] or [MapGrabRight] to grab and view the map. The map is <b><u>important</b></u> for navigation.",
+        ["TUTORIAL.MAP.DUMMY_TEXT"] = "Use your left ([MapGrabLeft]) or right ([MapGrabRight]) hand and press the respective button to pick up and view the map until you have filled the progress bar!",
+        ["TUTORIAL.EXPRESSIONS.TEXT"] = "Press and hold the [chat] button open the expressions wheel. You can even mix!"
+    };
 
     /// <summary>
     /// Use a less impactful force rotate to look at the truck screen
