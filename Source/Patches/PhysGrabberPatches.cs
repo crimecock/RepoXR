@@ -175,15 +175,25 @@ internal static class PhysGrabberPatches
     /// <summary>
     /// Make sure the force grab timer also works in VR, where the grab key is the same as the "take from inventory" key
     /// </summary>
-    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.Update))]
+    // R.E.P.O. 0.5.0 moved the toggle-grab release (`if (toggleGrab && !(mountedVehicleGrab || grabHeld) &&
+    // !GameplayManager.instance.itemUnequipAutoHold) toggleGrab = false`) out of PhysGrabber.Update into
+    // GrabInputActiveGet(grabHeld, grabDown, ...). Matched against Update, the anchor was missing and the old Advance(-2)
+    // put the call into Update's grabDisableTimer countdown instead, which then never reached 0: grabbing stayed disabled.
+    // Here grabHeld (ldarg.1) goes through ShouldToggleGrabOff, as it did in Update before.
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.GrabInputActiveGet))]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> ForceHoldPatch(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
             .MatchForward(false,
+                new CodeMatch(OpCodes.Ldarg_1),
+                new CodeMatch(OpCodes.Or),
+                new CodeMatch(i => i.opcode == OpCodes.Brtrue || i.opcode == OpCodes.Brtrue_S),
+                new CodeMatch(OpCodes.Ldsfld, Field(typeof(GameplayManager), nameof(GameplayManager.instance))),
                 new CodeMatch(OpCodes.Ldfld,
                     Field(typeof(GameplayManager), nameof(GameplayManager.itemUnequipAutoHold))))
-            .Advance(-2)
+            .ThrowIfInvalid("PhysGrabber.GrabInputActiveGet: toggle-grab release not found")
+            .Advance(1)
             .InsertAndAdvance(
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldfld, Field(typeof(PhysGrabber), nameof(PhysGrabber.overrideGrabTimer))),

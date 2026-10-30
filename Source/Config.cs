@@ -156,6 +156,11 @@ public class Config(string assemblyPath, ConfigFile file)
     public ConfigEntry<bool> PostProcessing { get; } = file.Create("Rendering", nameof(PostProcessing), false,
         "The game's post-processing: color grading, vignette, grain and the other screen effects. Off gives a brighter image and saves about 5 ms of GPU time per frame on Quest.");
 
+    // Quest port: Rendering/FpsCounter.cs
+    [ConfigDescriptor(customName: "FPS Counter")]
+    public ConfigEntry<bool> ShowFPS { get; } = file.Create("Rendering", nameof(ShowFPS), false,
+        "Shows the frame rate low in the left of your view: frames per second, the average frame time and the slowest frame of the last half second (and the CPU and GPU times when the headset reports them). Quest 3 runs the game at 72 FPS: green at 68 and above, yellow from 50, red below.");
+
     [ConfigDescriptor]
     public ConfigEntry<bool> Vignette { get; } = file.Create("Rendering", nameof(Vignette), true,
         "Enables the vignette shader used in certain scenarios and levels in the game.");
@@ -211,6 +216,7 @@ public class Config(string assemblyPath, ConfigFile file)
         PostProcessing.SettingChanged += (_, _) => Rendering.PostProcessingSetting.Update();
         OtherFlashlightShadows.SettingChanged += (_, _) => Rendering.FlashlightShadows.Update();
         Rendering.LampLighting.Create();
+        Rendering.FpsCounter.Create();
 
         CameraResolution.SettingChanged += (_, _) =>
         {

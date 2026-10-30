@@ -63,15 +63,136 @@ internal static class InputPatches
         {
             __result = (int)key >= bindings
                 ? AssetCollection.RemappableControls.additionalBindings[(int)key - bindings]
-                : Actions.Instance[key.ToString()];
+                : VRActionFor(key);
 
-            return false;
+            // If no key was found, fall back to vanilla keybind (likely won't work with VR controllers though)
+            return __result == null;
         }
         catch
         {
-            // If no key was found, fall back to vanilla keybind (likely won't work with VR controllers though)
             return true;
         }
+    }
+
+    private static InputActionAsset cachedActions;
+    private static readonly Dictionary<InputKey, InputAction> VRActions = new();
+
+    /// <summary>
+    /// The VR action for a game key, or null. R.E.P.O. 0.5.0 added keys the VR actions do not have (vehicles, the
+    /// expression wheel, UI navigation...): these used to throw on every call (the asset's indexer), which is slow
+    /// under IL2CPP and happened every frame while driving; now they are looked up once
+    /// </summary>
+    private static InputAction VRActionFor(InputKey key)
+    {
+        var actions = VRInputSystem.Instance.Actions;
+        if (actions != cachedActions)
+        {
+            cachedActions = actions;
+            VRActions.Clear();
+        }
+
+        if (VRActions.TryGetValue(key, out var action))
+            return action;
+
+        var name = key switch
+        {
+            // Holding on to a vehicle (scooter, snow bike) is the grab beam
+            InputKey.VehicleGrab => "Grab",
+            _ => key.ToString(),
+        };
+
+        return VRActions[key] = actions.FindAction(name);
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0 vehicle keys (keyboard W/S/A/D by default) on the movement stick
+    /// </summary>
+    private static class VehicleStick
+    {
+        private static int frame = -1;
+        private static int held, previous;
+
+        private static int Bit(InputKey key) => key switch
+        {
+            InputKey.VehicleAccelerate => 1,
+            InputKey.VehicleBrake => 2,
+            InputKey.VehicleDriftLeft => 4,
+            InputKey.VehicleDriftRight => 8,
+            _ => 0,
+        };
+
+        public static bool Handles(InputKey key) => Bit(key) != 0;
+
+        private static void Update()
+        {
+            if (frame == Time.frameCount)
+                return;
+
+            frame = Time.frameCount;
+            previous = held;
+
+            var stick = Actions.Instance["Movement"].ReadValue<Vector2>();
+            held = (stick.y > 0.5f ? 1 : 0) | (stick.y < -0.5f ? 2 : 0) | (stick.x < -0.5f ? 4 : 0) |
+                   (stick.x > 0.5f ? 8 : 0);
+        }
+
+        public static bool Held(InputKey key)
+        {
+            Update();
+            return (held & Bit(key)) != 0;
+        }
+
+        public static bool Down(InputKey key)
+        {
+            Update();
+            return (held & Bit(key)) != 0 && (previous & Bit(key)) == 0;
+        }
+
+        public static bool Up(InputKey key)
+        {
+            Update();
+            return (held & Bit(key)) == 0 && (previous & Bit(key)) != 0;
+        }
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0: the snow bike's throttle and steering (VehicleThrottleGet/VehicleSteeringGet, W-S and D-A on a
+    /// keyboard) follow the movement stick, analog
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.VehicleThrottleGet))]
+    [HarmonyPrefix]
+    private static bool VehicleThrottleGet(InputManager __instance, ref float __result)
+    {
+        __result = __instance.VehicleInputAllowed() ? Actions.Instance["Movement"].ReadValue<Vector2>().y : 0;
+        return false;
+    }
+
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.VehicleSteeringGet))]
+    [HarmonyPrefix]
+    private static bool VehicleSteeringGet(InputManager __instance, ref float __result)
+    {
+        __result = __instance.VehicleInputAllowed() ? Actions.Instance["Movement"].ReadValue<Vector2>().x : 0;
+        return false;
+    }
+
+    /// <summary>
+    /// R.E.P.O. 0.5.0 lets vehicles (snow bike, golf cart) take input only while the game's own Player action map is
+    /// enabled; in VR the controls come from RepoXR's PlayerInput, so that map says nothing about them. The other
+    /// checks stay
+    /// </summary>
+    [HarmonyPatch(typeof(InputManager), nameof(InputManager.VehicleInputAllowed))]
+    [HarmonyPrefix]
+    private static bool VehicleInputAllowed(InputManager __instance, ref bool __result)
+    {
+        __result = Application.isFocused && SemiFunc.NoTextInputsActive() &&
+                   __instance.disableMovementTimer <= 0 &&
+                   !(GameDirector.instance && GameDirector.instance.DisableInput) &&
+                   !(PlayerController.instance && PlayerController.instance.InputDisableTimer > 0) &&
+                   !(__instance.disableControlsExceptTimer > 0 && (__instance.disableControlsExceptList == null ||
+                                                                   !__instance.disableControlsExceptList.Contains(InputKey.Movement))) &&
+                   !(__instance.disableControlsIncludeTimer > 0 && __instance.disableControlsIncludeList != null &&
+                     __instance.disableControlsIncludeList.Contains(InputKey.Movement));
+        return false;
     }
 
     [HarmonyPatch(typeof(InputManager), nameof(InputManager.GetMovement))]
@@ -165,6 +286,10 @@ internal static class InputPatches
                 __result = false;
                 return false;
 
+            case var vehicle when VehicleStick.Handles(vehicle):
+                __result = VehicleStick.Down(vehicle);
+                return false;
+
             default:
                 __result = __instance.GetAction(key).WasPressedThisFrame();
                 return false;
@@ -190,6 +315,12 @@ internal static class InputPatches
             return false;
         }
 
+        if (VehicleStick.Handles(key))
+        {
+            __result = VehicleStick.Up(key);
+            return false;
+        }
+
         __result = __instance.GetAction(key).WasReleasedThisFrame();
 
         return false;
@@ -208,6 +339,12 @@ internal static class InputPatches
         if (key == InputKey.UIClick && XRRayInteractorManager.Instance is { } rays)
         {
             __result = rays.GetTriggerButton();
+            return false;
+        }
+
+        if (VehicleStick.Handles(key))
+        {
+            __result = VehicleStick.Held(key);
             return false;
         }
 
