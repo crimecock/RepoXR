@@ -18,7 +18,14 @@ public class VRInputSystem : MonoBehaviour
     private PlayerInput playerInput;
 
     public InputActionAsset Actions => playerInput.actions;
-    public string CurrentControlScheme => playerInput.currentControlScheme;
+    /// <summary>
+    /// The control scheme of the paired controllers. On the Quest, where PlayerInput can end up pairing no controller
+    /// at all (Quest 3 Touch Plus through the XR input subsystem: "Invalid user"), the Meta Quest scheme: every binding
+    /// is on generic XR controllers and in every scheme, so its bindings are the ones in use
+    /// </summary>
+    public string CurrentControlScheme =>
+        !string.IsNullOrEmpty(playerInput.currentControlScheme) ? playerInput.currentControlScheme
+        : Plugin.IsQuest && playerInput.actions.FindControlSchemeIndex("Meta Quest") >= 0 ? "Meta Quest" : "";
 
     private Dictionary<string, bool> inputToggle = [];
 

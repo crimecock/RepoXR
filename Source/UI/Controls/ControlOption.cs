@@ -33,7 +33,7 @@ public class ControlOption : MonoBehaviour
     public void DeleteBinding()
     {
         // Don't allow to unbind while no controller scheme is known
-        if (string.IsNullOrEmpty(playerInput.currentControlScheme))
+        if (string.IsNullOrEmpty(VRInputSystem.Instance.CurrentControlScheme))
             return;
 
         action.ApplyBindingOverride(bindingIndex, "");
@@ -71,9 +71,9 @@ public class ControlOption : MonoBehaviour
 
         bindingIndex = Mathf.Max(control.bindingIndex, 0) +
                        Mathf.Max(
-                           control.currentInput.action.GetBindingIndex(playerInput.currentControlScheme), 0);
+                           control.currentInput.action.GetBindingIndex(VRInputSystem.Instance.CurrentControlScheme), 0);
         
-        if (string.IsNullOrEmpty(playerInput.currentControlScheme))
+        if (string.IsNullOrEmpty(VRInputSystem.Instance.CurrentControlScheme))
         {
             controlText.text = "<sprite=37> DISCONNECTED";
 

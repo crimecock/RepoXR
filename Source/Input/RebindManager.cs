@@ -138,7 +138,7 @@ public class RebindManager : MonoBehaviour
             return;
         
         // Don't allow rebinding until a controller scheme is known
-        if (string.IsNullOrEmpty(playerInput.currentControlScheme))
+        if (string.IsNullOrEmpty(VRInputSystem.Instance.CurrentControlScheme))
             return;
 
         if (currentOperation != null)
