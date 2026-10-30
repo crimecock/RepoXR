@@ -30,6 +30,7 @@ internal static class MirrorPatches
     internal static bool PerEye = true;
     internal static bool FlipSkew = true;
     internal static bool SwapEyes;
+    internal static Action<MirrorReflection, Camera.StereoscopicEye, Vector3, Matrix4x4>? AfterEyeRender;
 
     private static bool SinglePass => Plugin.Config.SinglePassRendering.Value;
     private static bool Shown => Plugin.Config.ShopMirror.Value && !SinglePass;
@@ -188,6 +189,9 @@ internal static class MirrorPatches
             }
 
             reflection.cullingMatrix = reflection.projectionMatrix * worldToCamera;
+            reflection.Render();
+            AfterEyeRender?.Invoke(mirror, eye, eyePosition, projection);
+            return;
         }
 
         reflection.Render();
