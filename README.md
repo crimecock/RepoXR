@@ -178,7 +178,9 @@ Every change, patch by patch: [docs/repo-0.5.0.md](docs/repo-0.5.0.md) · [по-
 | A · B | Jump · tumble | Прыжок · кувырок |
 
 Map at the shoulder, flashlight at the head, inventory, vehicles, weapons, tumble climbing: [docs/controls.md](docs/controls.md) ·
-[по-русски](docs/controls.ru.md). Rebind in *Settings → Controls*.
+[по-русски](docs/controls.ru.md). Rebind in *Settings → Controls*, where free actions (Inventory 1–3, Expression 1–6,
+Push To Talk) can get a button too · переназначение — *Настройки → Управление*. On the Quest the menu is on ≡ and X
+mutes · на Quest меню на ≡, X — микрофон ([Quest controls](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.md)).
 
 ## Related · Связанные проекты
 
@@ -187,7 +189,7 @@ Map at the shoulder, flashlight at the head, inventory, vehicles, weapons, tumbl
   Quest 3 без ПК с этим RepoXR, из вашей копии игры. [Controls on Quest](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.md) ·
   [управление на Quest](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.ru.md).
 - The code of this branch (`Source/`) is repo-quest-vr's [`patches/repoxr`](https://github.com/crimecock/repo-quest-vr/tree/repo-0.5.0/patches/repoxr)
-  0001–0029 applied to RepoXR 1.2.3 · код этой ветки — патчи 0001–0029 из repo-quest-vr поверх RepoXR 1.2.3.
+  0001–0032 applied to RepoXR 1.2.3 · код этой ветки — патчи 0001–0032 из repo-quest-vr поверх RepoXR 1.2.3.
 - Upstream: [DaXcess/RepoXR](https://github.com/DaXcess/RepoXR) (RepoXR 1.2.3, R.E.P.O. 0.4.4),
   [Dobutsu/repo-quest-vr](https://github.com/Dobutsu/repo-quest-vr) (the original Quest port).
 

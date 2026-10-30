@@ -8,7 +8,7 @@ rebound in *Settings → Controls* (RepoXR lists its actions there). Left-handed
 *Left* swaps the hands.
 
 > From RepoXR 1.2.3's code and action map and the 0.5.0 port's changes. Checked in VR on PC (SteamVR, Quest
-> controllers): menus, lobby, looking around, pointers, grabbing; vehicles and weapons are still being checked. Unlike
+> controllers): everything below works. Unlike
 > the Quest build ([repo-quest-vr](https://github.com/crimecock/repo-quest-vr)), where the menu is on the ≡ button and X
 > mutes, the PC build keeps RepoXR's bindings.
 
@@ -78,6 +78,13 @@ Scooter, snow bike (Arctic), golf cart (Desert).
 - **Drive:** **left stick** forward to accelerate, back to brake and reverse, left/right to steer; far to a side to
   drift. The scooter and snow bike go where your hand points (or your head: VR Settings → Input → *Vehicle direction source*).
 - **Horn:** **right grip** on a scooter.
+
+## Rebinding and free actions
+
+*Settings → Controls* lists RepoXR's actions: point at one, press the trigger, then press the new button. Some actions
+have no button by default and can be given one there: **Inventory 1–3** (take an item out of a slot), **Expression
+1–6** (play an expression directly), **Push To Talk**, **Chat Delete**. *Reset* in that page brings back the defaults.
+Hold / toggle under some actions (crouch, sprint, grab...) chooses whether the button has to be held.
 
 ## When you are dead
 

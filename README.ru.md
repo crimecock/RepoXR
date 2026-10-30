@@ -129,7 +129,7 @@ Sensitivity*.
 
 | Контроллер Quest / Touch | Что делает |
 |---|---|
-| Левый стик · нажать · зажать | Ходьба · чат (в мультиплеере) · колесо эмоций |
+| Левый стик · нажать · зажать | Ходьба · чат · колесо эмоций |
 | Левый курок · левый grip | Бег · вращать предмет |
 | **X** · Y | **Меню** · сбросить рост |
 | Правый стик влево/вправо · вверх/вниз · нажать | Поворот · оттолкнуть/притянуть, прокрутка · присесть |
@@ -138,14 +138,15 @@ Sensitivity*.
 | A · B | Прыжок · кувырок |
 
 Карта у плеча, фонарь у головы, инвентарь, техника, оружие, лазание: [docs/controls.ru.md](docs/controls.ru.md).
-Переназначить — *Настройки → Управление*.
+Переназначить — *Настройки → Управление*; там же можно дать кнопки свободным действиям (Inventory 1–3, Expression 1–6,
+Push To Talk). На Quest меню на кнопке ≡, а X выключает микрофон ([управление на Quest](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.ru.md)).
 
 ## Связанные проекты
 
 - **[crimecock/repo-quest-vr](https://github.com/crimecock/repo-quest-vr)** (ветка `repo-0.5.0`) — сборка R.E.P.O. 0.5.0
   для Quest 3 без ПК с этим же RepoXR, из вашей копии игры.
   [Управление на Quest](https://github.com/crimecock/repo-quest-vr/blob/repo-0.5.0/docs/controls.ru.md).
-- Код этой ветки (`Source/`) — патчи 0001–0029 из [`patches/repoxr`](https://github.com/crimecock/repo-quest-vr/tree/repo-0.5.0/patches/repoxr)
+- Код этой ветки (`Source/`) — патчи 0001–0032 из [`patches/repoxr`](https://github.com/crimecock/repo-quest-vr/tree/repo-0.5.0/patches/repoxr)
   repo-quest-vr поверх RepoXR 1.2.3.
 - Исходные проекты: [DaXcess/RepoXR](https://github.com/DaXcess/RepoXR) (RepoXR 1.2.3, R.E.P.O. 0.4.4),
   [Dobutsu/repo-quest-vr](https://github.com/Dobutsu/repo-quest-vr) (оригинальный порт на Quest).
