@@ -280,6 +280,33 @@ internal static class PhysGrabberUniversalPatches
         }
     }
 
+    /// <summary>
+    /// R.E.P.O. 0.5.0 moved the end of object rotation into ObjectTurningRelease, which stores the new rotation relative
+    /// to the camera; RepoXR applies it relative to the hand, so a rotated object jumped when the rotate button was
+    /// let go. Same for ForceGrabPhysObject (items and vehicles the game makes you hold), which measured the grab from
+    /// the camera while every other grab starts from the hand
+    /// </summary>
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ObjectTurningRelease))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> TurningReleaseFromHandPatch(IEnumerable<CodeInstruction> instructions) =>
+        HandInsteadOfCamera(instructions, "PhysGrabber.ObjectTurningRelease");
+
+    [HarmonyPatch(typeof(PhysGrabber), nameof(PhysGrabber.ForceGrabPhysObject))]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> ForceGrabFromHandPatch(IEnumerable<CodeInstruction> instructions) =>
+        HandInsteadOfCamera(instructions, "PhysGrabber.ForceGrabPhysObject");
+
+    private static IEnumerable<CodeInstruction> HandInsteadOfCamera(IEnumerable<CodeInstruction> instructions, string where)
+    {
+        return new CodeMatcher(instructions)
+            .MatchForward(false,
+                new CodeMatch(OpCodes.Callvirt,
+                    Method(typeof(PlayerLocalCamera), nameof(PlayerLocalCamera.GetOverrideTransform))))
+            .ThrowIfInvalid($"{where}: GetOverrideTransform not found")
+            .Repeat(matcher => matcher.Set(OpCodes.Call, PlayerLocalCameraExtensions.GetHandOverrideTransformMethod))
+            .InstructionEnumeration();
+    }
+
     private static float nextGrabReport;
     private static int grabReports;
 
