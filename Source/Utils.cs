@@ -86,6 +86,32 @@ internal static class Utils
         return $"""<sprite name="{id}">""";
     }
 
+    /// <summary>
+    /// Makes sure a text can draw <see cref="GetControlSpriteString"/>'s VR controller icons. R.E.P.O. 0.5.0 gives
+    /// its keybind texts its own glyph sprite assets (keyboard, gamepads), which have none of them: the names did not
+    /// resolve and the controls page showed question marks. RepoXR's input sprite asset becomes the text's sprite asset
+    /// when it has none, or a fallback of the one it has
+    /// </summary>
+    public static void EnsureVRSprites(TMPro.TMP_Text? text)
+    {
+        var sprites = Assets.AssetCollection.TMPInputsSpriteAsset;
+        if (!text || !sprites)
+            return;
+
+        if (!text!.spriteAsset)
+        {
+            text.spriteAsset = sprites;
+            return;
+        }
+
+        if (text.spriteAsset == sprites)
+            return;
+
+        text.spriteAsset.fallbackSpriteAssets ??= [];
+        if (!text.spriteAsset.fallbackSpriteAssets.Contains(sprites))
+            text.spriteAsset.fallbackSpriteAssets.Add(sprites);
+    }
+
     public static bool GetControlHand(string controlPath, out HapticManager.Hand hand)
     {
         hand = HapticManager.Hand.Both;

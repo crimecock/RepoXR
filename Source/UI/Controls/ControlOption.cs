@@ -89,6 +89,7 @@ public class ControlOption : MonoBehaviour
             return;
         }
 
+        Utils.EnsureVRSprites(controlText);
         controlText.text = Utils.GetControlSpriteString(binding);
     }
 
